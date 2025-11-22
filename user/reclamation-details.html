@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails de la Réclamation - Gestion des Réclamations</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-file-alt"></i>
+            <span>ReclamPro</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="user-dashboard.html" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Tableau de Bord</span>
+            </a>
+            <a href="add-reclamation.html" class="nav-item">
+                <i class="fas fa-plus"></i>
+                <span>Nouvelle Réclamation</span>
+            </a>
+            <a href="my-reclamations.html" class="nav-item active">
+                <i class="fas fa-list"></i>
+                <span>Mes Réclamations</span>
+            </a>
+            <a href="profile.html" class="nav-item">
+                <i class="fas fa-user"></i>
+                <span>Profil</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="../login.html" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Déconnexion</span>
+            </a>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <header class="top-bar">
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="top-bar-right">
+                <div class="user-info">
+                    <span>Bonjour, Jean Dupont</span>
+                    <img src="https://via.placeholder.com/40" alt="Avatar" class="avatar">
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+            <a href="my-reclamations.html" class="back-link">
+                <i class="fas fa-arrow-left"></i> Retour aux réclamations
+            </a>
+
+            <div class="details-container">
+                <section class="section">
+                    <div class="section-header">
+                        <h1>Réclamation #REC-2025-002</h1>
+                        <span class="badge badge-info">En cours</span>
+                    </div>
+
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <label>Catégorie</label>
+                            <p>Service</p>
+                        </div>
+                        <div class="detail-item">
+                            <label>Sous-Catégorie</label>
+                            <p>Service insatisfaisant</p>
+                        </div>
+                        <div class="detail-item">
+                            <label>Date de Soumission</label>
+                            <p>02/11/2025</p>
+                        </div>
+                        <div class="detail-item">
+                            <label>Priorité</label>
+                            <p><span class="priority-badge priority-medium">Moyenne</span></p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h3>Description</h3>
+                    <p>J'ai appelé le service client le 01/11/2025 pour une question sur ma commande. L'agent m'a mis en attente pendant 15 minutes puis m'a raccroché au nez. J'ai rappelé et j'ai dû expliquer à nouveau le problème. C'est très frustrant.</p>
+
+                    <hr>
+
+                    <h3>Pièce Jointe</h3>
+                    <div class="attachment">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>preuve_appel.pdf</span>
+                        <a href="#" class="btn btn-sm btn-secondary">Télécharger</a>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Historique et Remarques</h2>
+                    
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <h4>Réclamation Soumise</h4>
+                                <p class="timestamp">02/11/2025 à 14:30</p>
+                                <p>Votre réclamation a été enregistrée avec succès.</p>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <h4>Assignée à un Agent</h4>
+                                <p class="timestamp">02/11/2025 à 15:00</p>
+                                <p>Assignée à Marie Leclerc - Service Client</p>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <h4>Remarque d'Agent</h4>
+                                <p class="timestamp">03/11/2025 à 10:15</p>
+                                <p>J'ai vérifié les enregistrements d'appel. Confirmé: déconnexion accidentelle. Je vous propose un bon d'achat de 50€ en compensation.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Messages</h2>
+                    
+                    <div class="chat-container">
+                        <div class="message-group">
+                            <div class="message message-other">
+                                <div class="message-sender">Marie Leclerc</div>
+                                <p>Bonjour, merci de nous avoir contactés. J'ai bien reçu votre réclamation.</p>
+                                <span class="message-time">02/11/2025 15:05</span>
+                            </div>
+
+                            <div class="message message-other">
+                                <div class="message-sender">Marie Leclerc</div>
+                                <p>Après vérification, je confirme que l'appel a été coupé de notre côté. Mes excuses.</p>
+                                <span class="message-time">03/11/2025 10:20</span>
+                            </div>
+
+                            <div class="message message-self">
+                                <p>Merci pour votre réponse rapide. Je suis satisfait de la compensation proposée.</p>
+                                <span class="message-time">03/11/2025 11:30</span>
+                            </div>
+                        </div>
+
+                        <form class="message-form" id="messageForm">
+                            <input type="text" id="messageInput" placeholder="Votre message..." required>
+                            <button type="submit" class="btn btn-primary btn-icon">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/dashboard.js"></script>
+    <script>
+        document.getElementById('messageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('messageInput');
+            const message = input.value;
+            
+            if (message.trim()) {
+                alert('Message envoyé avec succès!');
+                input.value = '';
+            }
+        });
+    </script>
+</body>
+</html>

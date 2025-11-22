@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes Réclamations - Gestion des Réclamations</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-file-alt"></i>
+            <span>ReclamPro</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="user-dashboard.html" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Tableau de Bord</span>
+            </a>
+            <a href="add-reclamation.html" class="nav-item">
+                <i class="fas fa-plus"></i>
+                <span>Nouvelle Réclamation</span>
+            </a>
+            <a href="my-reclamations.html" class="nav-item active">
+                <i class="fas fa-list"></i>
+                <span>Mes Réclamations</span>
+            </a>
+            <a href="profile.html" class="nav-item">
+                <i class="fas fa-user"></i>
+                <span>Profil</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="../login.html" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Déconnexion</span>
+            </a>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <header class="top-bar">
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="top-bar-right">
+                <div class="user-info">
+                    <span>Bonjour, Jean Dupont</span>
+                    <img src="https://via.placeholder.com/40" alt="Avatar" class="avatar">
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+            <h1>Mes Réclamations</h1>
+
+            <section class="section">
+                <div class="section-header">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">
+                            <i class="fas fa-list"></i> Toutes
+                        </button>
+                        <button class="filter-btn" data-filter="pending">
+                            <i class="fas fa-clock"></i> En attente
+                        </button>
+                        <button class="filter-btn" data-filter="in-progress">
+                            <i class="fas fa-hourglass-half"></i> En cours
+                        </button>
+                        <button class="filter-btn" data-filter="resolved">
+                            <i class="fas fa-check-circle"></i> Résolues
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Titre</th>
+                                <th>Catégorie</th>
+                                <th>Date</th>
+                                <th>Priorité</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#REC-2025-001</td>
+                                <td>Produit défectueux reçu</td>
+                                <td>Produit</td>
+                                <td>01/11/2025</td>
+                                <td><span class="priority-badge priority-high">Haute</span></td>
+                                <td><span class="badge badge-success">Résolue</span></td>
+                                <td>
+                                    <a href="reclamation-details.html" class="btn btn-sm btn-secondary">Détails</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#REC-2025-002</td>
+                                <td>Service client insatisfaisant</td>
+                                <td>Service</td>
+                                <td>02/11/2025</td>
+                                <td><span class="priority-badge priority-medium">Moyenne</span></td>
+                                <td><span class="badge badge-info">En cours</span></td>
+                                <td>
+                                    <a href="reclamation-details.html" class="btn btn-sm btn-secondary">Détails</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#REC-2025-003</td>
+                                <td>Livraison en retard de 5 jours</td>
+                                <td>Livraison</td>
+                                <td>03/11/2025</td>
+                                <td><span class="priority-badge priority-urgent">Urgente</span></td>
+                                <td><span class="badge badge-warning">En attente</span></td>
+                                <td>
+                                    <a href="reclamation-details.html" class="btn btn-sm btn-secondary">Détails</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#REC-2025-004</td>
+                                <td>Facture incorrecte</td>
+                                <td>Facturation</td>
+                                <td>04/11/2025</td>
+                                <td><span class="priority-badge priority-low">Basse</span></td>
+                                <td><span class="badge badge-success">Résolue</span></td>
+                                <td>
+                                    <a href="reclamation-details.html" class="btn btn-sm btn-secondary">Détails</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/dashboard.js"></script>
+    <script>
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Agent - Gestion des Réclamations</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-file-alt"></i>
+            <span>ReclamPro</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="agent-dashboard.html" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Tableau de Bord</span>
+            </a>
+            <a href="manage-reclamations.html" class="nav-item">
+                <i class="fas fa-tasks"></i>
+                <span>Gérer les Réclamations</span>
+            </a>
+            <a href="agent-profile.html" class="nav-item active">
+                <i class="fas fa-user"></i>
+                <span>Profil</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="../login.html" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Déconnexion</span>
+            </a>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <header class="top-bar">
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="top-bar-right">
+                <div class="user-info">
+                    <span>Bonjour, Marie Leclerc</span>
+                    <img src="https://via.placeholder.com/40" alt="Avatar" class="avatar">
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+            <h1>Profil Agent</h1>
+
+            <section class="section">
+                <h2>Informations Personnelles</h2>
+                
+                <form class="form-large" id="profileForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">Prénom</label>
+                            <input type="text" id="firstName" name="firstName" value="Marie" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lastName">Nom</label>
+                            <input type="text" id="lastName" name="lastName" value="Leclerc" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" value="marie.leclerc@company.fr" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Téléphone</label>
+                            <input type="tel" id="phone" name="phone" value="+33 1 23 45 67 89">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="department">Département</label>
+                            <input type="text" id="department" name="department" value="Service Client" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="specialization">Spécialisation</label>
+                            <select id="specialization" name="specialization" required>
+                                <option selected>Service</option>
+                                <option>Produit</option>
+                                <option>Livraison</option>
+                                <option>Facturation</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="section">
+                <h2>Statistiques Personnelles</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background-color: rgba(37, 99, 235, 0.1); color: var(--primary-color);">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Réclamations Résolues</div>
+                            <div class="stat-value">145</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background-color: rgba(22, 163, 74, 0.1); color: var(--success-color);">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Note Moyenne</div>
+                            <div class="stat-value">4.8/5</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background-color: rgba(8, 145, 178, 0.1); color: var(--info-color);">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Temps Moyen</div>
+                            <div class="stat-value">2.5 jours</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Sécurité</h2>
+                
+                <form class="form-large" id="passwordForm">
+                    <div class="form-group">
+                        <label for="currentPassword">Mot de passe actuel</label>
+                        <input type="password" id="currentPassword" name="currentPassword" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newPassword">Nouveau mot de passe</label>
+                        <input type="password" id="newPassword" name="newPassword" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirmer le mot de passe</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Modifier le mot de passe</button>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/dashboard.js"></script>
+    <script>
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Profil mis à jour avec succès!');
+        });
+
+        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newPass = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            
+            if (newPass !== confirm) {
+                alert('Les mots de passe ne correspondent pas!');
+                return;
+            }
+            alert('Mot de passe changé avec succès!');
+        });
+    </script>
+</body>
+</html>

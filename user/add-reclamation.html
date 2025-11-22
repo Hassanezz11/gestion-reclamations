@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouvelle Réclamation - Gestion des Réclamations</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-file-alt"></i>
+            <span>ReclamPro</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="user-dashboard.html" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Tableau de Bord</span>
+            </a>
+            <a href="add-reclamation.html" class="nav-item active">
+                <i class="fas fa-plus"></i>
+                <span>Nouvelle Réclamation</span>
+            </a>
+            <a href="my-reclamations.html" class="nav-item">
+                <i class="fas fa-list"></i>
+                <span>Mes Réclamations</span>
+            </a>
+            <a href="profile.html" class="nav-item">
+                <i class="fas fa-user"></i>
+                <span>Profil</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="../login.html" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Déconnexion</span>
+            </a>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <header class="top-bar">
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="top-bar-right">
+                <div class="user-info">
+                    <span>Bonjour, Jean Dupont</span>
+                    <img src="https://via.placeholder.com/40" alt="Avatar" class="avatar">
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+            <h1>Soumettre une Nouvelle Réclamation</h1>
+
+            <section class="section">
+                <form class="form-large" id="reclamationForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Catégorie *</label>
+                            <select id="category" name="category" required onchange="updateSubcategories()">
+                                <option value="">Sélectionnez une catégorie</option>
+                                <option value="product">Produit</option>
+                                <option value="service">Service</option>
+                                <option value="delivery">Livraison</option>
+                                <option value="billing">Facturation</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subcategory">Sous-Catégorie *</label>
+                            <select id="subcategory" name="subcategory" required>
+                                <option value="">Sélectionnez d'abord une catégorie</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="priority">Priorité *</label>
+                            <select id="priority" name="priority" required>
+                                <option value="low">Basse</option>
+                                <option value="medium" selected>Moyenne</option>
+                                <option value="high">Haute</option>
+                                <option value="urgent">Urgente</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reference">Numéro de Référence (optionnel)</label>
+                            <input type="text" id="reference" name="reference" placeholder="Ex: #CMD-123456">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="title">Titre *</label>
+                        <input type="text" id="title" name="title" required placeholder="Résumé de votre réclamation">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description Détaillée *</label>
+                        <textarea id="description" name="description" required placeholder="Décrivez votre réclamation en détail..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="attachment">Pièce Jointe (optionnelle)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="attachment" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                            <span class="file-input-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                Cliquez ou glissez-déposez un fichier
+                            </span>
+                        </div>
+                        <small>Formats acceptés: PDF, JPG, PNG, DOC, DOCX (Max 5MB)</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="user-dashboard.html" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">Soumettre la Réclamation</button>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/dashboard.js"></script>
+    <script>
+        const subcategories = {
+            'product': ['Produit défectueux', 'Produit endommagé', 'Produit non conforme'],
+            'service': ['Service insatisfaisant', 'Délai excessif', 'Manque de professionnalisme'],
+            'delivery': ['Livraison en retard', 'Produit non reçu', 'Mauvaise adresse'],
+            'billing': ['Facturation erronée', 'Double facturation', 'Remboursement']
+        };
+
+        function updateSubcategories() {
+            const category = document.getElementById('category').value;
+            const subcategorySelect = document.getElementById('subcategory');
+            
+            subcategorySelect.innerHTML = '<option value="">Sélectionnez une sous-catégorie</option>';
+            
+            if (category && subcategories[category]) {
+                subcategories[category].forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.toLowerCase().replace(/\s+/g, '-');
+                    option.textContent = sub;
+                    subcategorySelect.appendChild(option);
+                });
+            }
+        }
+
+        document.getElementById('reclamationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Réclamation soumise avec succès!');
+            window.location.href = 'my-reclamations.html';
+        });
+    </script>
+</body>
+</html>
