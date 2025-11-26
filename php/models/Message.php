@@ -1,33 +1,37 @@
 <?php
+require_once __DIR__ . '/../database.php';
+
 class Message
 {
-    private $conn;
+    private $pdo;
 
-    public function __construct($odbcConnection)
+    public function __construct(?PDO $pdo = null)
     {
-        $this->conn = $odbcConnection;
+        $this->pdo = $pdo ?? Database::getInstance();
     }
 
-    public function create(int $reclamationId, int $userId, string $message)
+    public function send(int $reclam_id, int $user_id, string $msg): bool
     {
-        $sql = "INSERT INTO MESSAGES (reclamation_id, utilisateur_id, message, date_creation)
-                VALUES (?, ?, ?, CURRENT_TIMESTAMP)";
-        $stmt = odbc_prepare($this->conn, $sql);
-        if (!$stmt) return false;
-        return odbc_execute($stmt, [$reclamationId, $userId, $message]);
+        $sql = "INSERT INTO messages (reclamation_id, utilisateur_id, message)
+                VALUES (:rec, :user, :msg)";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([
+            ':rec'  => $reclam_id,
+            ':user' => $user_id,
+            ':msg'  => $msg,
+        ]);
     }
 
-    public function findByReclamation(int $reclamationId)
+    public function getByReclamation(int $reclam_id): array
     {
-        $sql = "SELECT * FROM MESSAGES WHERE reclamation_id = ? ORDER BY date_creation ASC";
-        $stmt = odbc_prepare($this->conn, $sql);
-        if (!$stmt) return [];
-        if (!odbc_execute($stmt, [$reclamationId])) return [];
-        $rows = [];
-        while ($row = odbc_fetch_array($stmt)) {
-            $rows[] = $row;
-        }
-        return $rows;
+        $sql = "SELECT m.*, u.nom_complet AS auteur
+                FROM messages m
+                JOIN utilisateurs u ON u.id = m.utilisateur_id
+                WHERE m.reclamation_id = :rec
+                ORDER BY m.date_creation ASC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':rec' => $reclam_id]);
+        return $stmt->fetchAll();
     }
 }
-?>

@@ -1,26 +1,48 @@
 <?php
 /**
- * Connexion Oracle via ODBC
- * Configurez d'abord un DSN système dans Windows (ex: ORACLE_DSN)
+ * Classe Database
+ * ----------------
+ * Singleton responsable de la connexion PDO à MySQL.
+ * Utilisation :
+ *   $pdo = Database::getInstance();
  */
+
 class Database
 {
-    private static $conn = null;
+    private const DB_HOST = 'localhost';
+    private const DB_NAME = 'reclam_db';
+    private const DB_USER = 'root';
+    private const DB_PASS = '';
+    private const DB_CHARSET = 'utf8mb4';
 
-    public static function getConnection()
+    /** @var ?PDO */
+    private static $instance = null;
+
+    private function __construct() {}
+    private function __clone() {}
+
+    /**
+     * Retourne l'instance PDO unique
+     */
+    public static function getInstance(): PDO
     {
-        if (self::$conn === null) {
-            $dsn = 'ORACLE_DSN'; // Nom du DSN ODBC à configurer
-            $user = 'oracle_user';
-            $pass = 'oracle_password';
+        if (self::$instance === null) {
+            $dsn = 'mysql:host=' . self::DB_HOST . ';dbname=' . self::DB_NAME . ';charset=' . self::DB_CHARSET;
 
-            $conn = odbc_connect($dsn, $user, $pass);
-            if (!$conn) {
-                die('Erreur de connexion ODBC Oracle : ' . odbc_errormsg());
+            $options = [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES   => false,
+            ];
+
+            try {
+                self::$instance = new PDO($dsn, self::DB_USER, self::DB_PASS, $options);
+                echo "Connexion à la base de données réussie.";
+            } catch (PDOException $e) {
+                die(' Erreur de connexion MySQL : ' . $e->getMessage());
             }
-            self::$conn = $conn;
         }
-        return self::$conn;
+
+        return self::$instance;
     }
 }
-?>
