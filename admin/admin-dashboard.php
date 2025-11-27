@@ -3,6 +3,28 @@ session_start();
 $page_title  = "Tableau de Bord - Administrateur";
 $active_menu = "dashboard";
 
+require_once __DIR__ . '/../php/database.php';
+require_once __DIR__ . '/../php/models/User.php';
+require_once __DIR__ . '/../php/models/Reclamation.php';
+require_once __DIR__ . '/../php/models/Affectation.php';
+
+$pdo = Database::getInstance();
+
+$userModel = new User($pdo);
+$recModel  = new Reclamation($pdo);
+$affModel  = new Affectation($pdo);
+
+/* =======================
+   DASHBOARD COUNTS
+   ======================= */
+$totalUsers       = count($userModel->getAllClients());
+$totalAgents      = count($userModel->getAllAgents());
+$totalRecs        = count($recModel->getAll());
+$pendingRecs      = $recModel->countByStatus("non_assignee");
+$inProgressRecs   = $recModel->countByStatus("en_cours");
+$resolvedRecs     = $recModel->countByStatus("resolue");
+$recentRecs       = $recModel->getRecent(5);
+
 include 'includes/admin-header.php';
 ?>
 
@@ -19,7 +41,8 @@ include 'includes/admin-header.php';
             </div>
 
             <div class="topbar-user">
-                <img src="../images/logo.png" alt="Avatar" class="avatar-circle">
+                <img src="../images/logo.png" class="avatar-circle">
+
                 <div>
                     <span class="topbar-username">
                         <?= htmlspecialchars($_SESSION['user_name'] ?? 'Admin') ?>
@@ -31,33 +54,34 @@ include 'includes/admin-header.php';
 
         <!-- === STAT CARDS === -->
         <section class="cards-grid">
+
             <div class="card-stat">
                 <h3>Réclamations Totales</h3>
-                <p class="stat-number">120</p>
+                <p class="stat-number"><?= $totalRecs ?></p>
                 <p class="stat-label">Toutes les réclamations enregistrées</p>
             </div>
 
             <div class="card-stat">
-                <h3>En attente</h3>
-                <p class="stat-number stat-warning">14</p>
-                <p class="stat-label">Sans agent assigné</p>
+                <h3>Non assignées</h3>
+                <p class="stat-number stat-warning"><?= $pendingRecs ?></p>
+                <p class="stat-label">En attente d’un agent</p>
+            </div>
+
+            <div class="card-stat">
+                <h3>En cours</h3>
+                <p class="stat-number stat-info"><?= $inProgressRecs ?></p>
+                <p class="stat-label">Traitement en cours</p>
             </div>
 
             <div class="card-stat">
                 <h3>Résolues</h3>
-                <p class="stat-number stat-success">88</p>
-                <p class="stat-label">Cas clôturés avec succès</p>
+                <p class="stat-number stat-success"><?= $resolvedRecs ?></p>
+                <p class="stat-label">Cas clôturés</p>
             </div>
 
-            <div class="card-stat">
-                <h3>Agents actifs</h3>
-                <p class="stat-number">6</p>
-                <p class="stat-label">En service</p>
-            </div>
         </section>
 
-
-        <!-- === RECLAMATIONS TABLE === -->
+        <!-- === RECENT RECLAMATIONS === -->
         <div class="card">
             <div class="card-header">
                 <h2>Réclamations Récentes</h2>
@@ -66,24 +90,40 @@ include 'includes/admin-header.php';
 
             <table class="table">
                 <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Client</th>
-                        <th>Objet</th>
-                        <th>Statut</th>
-                        <th>Priorité</th>
-                        <th>Agent</th>
-                    </tr>
+                <tr>
+                    <th>#</th>
+                    <th>Client</th>
+                    <th>Objet</th>
+                    <th>Statut</th>
+                    <th>Priorité</th>
+                    <th>Agent</th>
+                </tr>
                 </thead>
+
                 <tbody>
+
+                <?php foreach ($recentRecs as $r): ?>
                     <tr>
-                        <td>1562</td>
-                        <td>Salma</td>
-                        <td>Facture erronée</td>
-                        <td><span class="badge badge-warning">En cours</span></td>
-                        <td><span class="badge badge-danger">Haute</span></td>
-                        <td>Youssef</td>
+                        <td><?= $r['id'] ?></td>
+                        <td><?= htmlspecialchars($r['client']) ?></td>
+                        <td><?= htmlspecialchars($r['objet']) ?></td>
+
+                        <td>
+                            <span class="badge <?= $r['statut'] ?>">
+                                <?= ucfirst(str_replace('_', ' ', $r['statut'])) ?>
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="badge <?= $r['priorite'] ?>">
+                                <?= ucfirst($r['priorite']) ?>
+                            </span>
+                        </td>
+
+                        <td><?= htmlspecialchars($r['agent'] ?? '—') ?></td>
                     </tr>
+                <?php endforeach; ?>
+
                 </tbody>
             </table>
         </div>

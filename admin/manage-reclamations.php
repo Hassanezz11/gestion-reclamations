@@ -4,10 +4,30 @@ session_start();
 $page_title  = "Gestion des Réclamations";
 $active_menu = "reclamations";
 
+require_once __DIR__ . '/../php/database.php';
+require_once __DIR__ . '/../php/models/Reclamation.php';
+
+$pdo = Database::getInstance();
+$recModel = new Reclamation($pdo);
+
+// DELETE LOGIC
+if (isset($_GET['delete'])) {
+    $id = (int) $_GET['delete'];
+    if ($id > 0) {
+        $recModel->delete($id);
+    }
+    header("Location: manage-reclamations.php?deleted=1");
+    exit;
+}
+
+// GET ALL RECLAMATIONS (WITH DETAILS)
+$reclamations = $recModel->getAllWithDetails();
+
 include 'includes/admin-header.php';
 ?>
 
 <div class="layout">
+
     <?php include 'includes/admin-sidebar.php'; ?>
 
     <main class="main">
@@ -15,40 +35,15 @@ include 'includes/admin-header.php';
         <header class="topbar">
             <div>
                 <h1>Gestion des Réclamations</h1>
-                <p class="topbar-subtitle">Filtrez, affectez et suivez l’état des réclamations.</p>
-            </div>
-
-            <div class="topbar-user">
-                <img src="../images/logo.png" alt="Avatar" class="avatar-circle">
-                <div>
-                    <span class="topbar-username"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Admin') ?></span>
-                    <span class="topbar-role">Administrateur</span>
-                </div>
+                <p class="topbar-subtitle">Suivi détaillé des demandes clients.</p>
             </div>
         </header>
 
         <section class="content">
 
-            <div class="card card-toolbar">
-                <div class="card-toolbar-left filters-inline">
-                    <select class="input-select">
-                        <option>Statut : Tous</option>
-                        <option>Non affectée</option>
-                        <option>En cours</option>
-                        <option>Résolue</option>
-                    </select>
-
-                    <select class="input-select">
-                        <option>Priorité : Toutes</option>
-                        <option>Faible</option>
-                        <option>Moyenne</option>
-                        <option>Haute</option>
-                    </select>
-                </div>
-                <div class="card-toolbar-right">
-                    <input type="text" class="input-search" placeholder="Rechercher par client, objet...">
-                </div>
-            </div>
+            <?php if (isset($_GET['deleted'])): ?>
+                <div class="alert alert-success">Réclamation supprimée.</div>
+            <?php endif; ?>
 
             <div class="card">
                 <div class="card-header">
@@ -63,48 +58,64 @@ include 'includes/admin-header.php';
                             <th>Client</th>
                             <th>Objet</th>
                             <th>Catégorie</th>
+                            <th>Priorité</th>
                             <th>Statut</th>
                             <th>Agent</th>
-                            <th style="width: 220px;">Actions</th>
+                            <th style="width: 190px;">Actions</th>
                         </tr>
                         </thead>
-                        <tbody>
-                        <tr>
-                            <td>1562</td>
-                            <td>Salma</td>
-                            <td>Facture erronée</td>
-                            <td>Facturation</td>
-                            <td><span class="badge badge-warning">En cours</span></td>
-                            <td>Youssef</td>
-                            <td class="table-actions">
-                                <button class="btn btn-secondary btn-sm"
-                                        onclick="window.location.href='reclamation-details.php'">
-                                    <i class="fas fa-eye"></i>&nbsp; Détails
-                                </button>
-                                <button class="btn btn-primary btn-sm"
-                                        onclick="window.location.href='assign-agent.php'">
-                                    <i class="fas fa-user-plus"></i>&nbsp; Assigner
-                                </button>
-                            </td>
-                        </tr>
 
-                        <tr>
-                            <td>1540</td>
-                            <td>Hamza</td>
-                            <td>Retard de livraison</td>
-                            <td>Livraison</td>
-                            <td><span class="badge badge-normal">Non affectée</span></td>
-                            <td>-</td>
-                            <td class="table-actions">
-                                <button class="btn btn-secondary btn-sm">
-                                    <i class="fas fa-eye"></i>&nbsp; Détails
-                                </button>
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="fas fa-user-plus"></i>&nbsp; Assigner
-                                </button>
-                            </td>
-                        </tr>
+                        <tbody>
+                        <?php if (empty($reclamations)): ?>
+                            <tr>
+                                <td colspan="8" style="text-align:center;">Aucune réclamation trouvée.</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($reclamations as $r): ?>
+                                <tr>
+                                    <td><?= $r['id'] ?></td>
+                                    <td><?= htmlspecialchars($r['client']) ?></td>
+                                    <td><?= htmlspecialchars($r['objet']) ?></td>
+                                    <td>
+                                        <?= htmlspecialchars($r['categorie'] ?? '—') ?>
+                                        <?php if (!empty($r['sous_categorie'])): ?>
+                                            <br><small><?= htmlspecialchars($r['sous_categorie']) ?></small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <span class="badge <?= $r['priorite'] ?>">
+                                            <?= ucfirst($r['priorite']) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge <?= $r['statut'] ?>">
+                                            <?= ucfirst(str_replace('_', ' ', $r['statut'])) ?>
+                                        </span>
+                                    </td>
+                                    <td><?= htmlspecialchars($r['agent'] ?? '—') ?></td>
+
+                                    <td class="table-actions">
+                                        <a class="btn btn-secondary btn-sm"
+                                           href="reclamation-details.php?id=<?= $r['id'] ?>">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+
+                                        <a class="btn btn-primary btn-sm"
+                                           href="assign-agent.php?id=<?= $r['id'] ?>">
+                                            <i class="fas fa-user-tie"></i>
+                                        </a>
+
+                                        <a class="btn btn-danger btn-sm"
+                                           onclick="return confirm('Supprimer cette réclamation ?');"
+                                           href="manage-reclamations.php?delete=<?= $r['id'] ?>">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                         </tbody>
+
                     </table>
                 </div>
 

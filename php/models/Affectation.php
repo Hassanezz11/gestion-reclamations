@@ -1,49 +1,38 @@
 <?php
-require_once __DIR__ . '/../database.php';
-
 class Affectation
 {
-    private $pdo;
+    private PDO $pdo;
 
-    public function __construct(?PDO $pdo = null)
+    public function __construct(PDO $pdo)
     {
-        $this->pdo = $pdo ?? Database::getInstance();
+        $this->pdo = $pdo;
     }
 
-    public function assign(int $reclam_id, int $agent_id): bool
+    public function assign(int $recId, int $agentId): bool
     {
-        $sql = "INSERT INTO affectations (reclamation_id, agent_id)
-                VALUES (:rec, :agent)";
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute([
-            ':rec'   => $reclam_id,
-            ':agent' => $agent_id,
-        ]);
+        $stmt = $this->pdo->prepare("
+            INSERT INTO affectations (reclamation_id, agent_id, date_affectation)
+            VALUES (?, ?, NOW())
+        ");
+        return $stmt->execute([$recId, $agentId]);
     }
 
-    public function getForReclamation(int $reclam_id): array
+    public function getAgentForReclamation(int $recId): ?array
     {
-        $sql = "SELECT a.*, u.nom_complet AS agent_nom
-                FROM affectations a
-                JOIN utilisateurs u ON u.id = a.agent_id
-                WHERE a.reclamation_id = :rec
-                ORDER BY a.date_affectation DESC";
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([':rec' => $reclam_id]);
-        return $stmt->fetchAll();
+        $stmt = $this->pdo->prepare("
+            SELECT u.*
+            FROM affectations a
+            JOIN utilisateurs u ON u.id = a.agent_id
+            WHERE a.reclamation_id = ?
+        ");
+        $stmt->execute([$recId]);
+        return $stmt->fetch() ?: null;
+    }
+    public function countByAgent(int $agentId): int
+    {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM affectations WHERE agent_id = ?");
+        $stmt->execute([$agentId]);
+        return (int)$stmt->fetchColumn();
     }
 
-    public function getForAgent(int $agent_id): array
-    {
-        $sql = "SELECT a.*, r.objet, r.statut
-                FROM affectations a
-                JOIN reclamations r ON r.id = a.reclamation_id
-                WHERE a.agent_id = :agent
-                ORDER BY a.date_affectation DESC";
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([':agent' => $agent_id]);
-        return $stmt->fetchAll();
-    }
 }

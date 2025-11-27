@@ -1,69 +1,153 @@
 <?php
-session_start();
+/**
+ * Auth Class
+ * ----------
+ * Gère l’authentification (login, register, logout)
+ * + Vérification des rôles
+ * + Redirections automatiques
+ */
+
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/models/User.php';
 
-$action = $_GET['action'] ?? null;
+class Auth
+{
+    private PDO $pdo;
+    private User $userModel;
 
-if ($action === 'login') {
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
+    public function __construct()
+    {
+        $this->pdo = Database::getInstance();
+        $this->userModel = new User($this->pdo);
 
-    if ($email === '' || $password === '') {
-        $_SESSION['auth_error'] = 'Veuillez remplir tous les champs.';
-        header('Location: /auth/login.php');
-        exit;
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
     }
 
-    $userModel = new User(Database::getConnection());
-    $user = $userModel->findByEmail($email);
+    /* =====================================
+       LOGIN
+       ===================================== */
+    public function login(string $email, string $password): bool
+    {
+        if ($email === '' || $password === '') {
+            $_SESSION['auth_error'] = "Veuillez remplir tous les champs.";
+            return false;
+        }
 
-    if ($user && password_verify($password, $user['mot_de_passe'])) {
+        $user = $this->userModel->findByEmail($email);
+
+        if (!$user) {
+            $_SESSION['auth_error'] = "Aucun compte trouvé avec cet email.";
+            return false;
+        }
+
+        if (!password_verify($password, $user['mot_de_passe'])) {
+            $_SESSION['auth_error'] = "Mot de passe incorrect.";
+            return false;
+        }
+
+        // Successful login
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_name'] = $user['nom_complet'];
-        $_SESSION['user_role'] = $user['role']; // 'admin','agent','user'
-        header('Location: /index.php');
+        $_SESSION['user_role'] = $user['role'];
+
+        // Redirect based on role
+        $this->redirectDashboard($user['role']);
+        return true;
+    }
+
+    /* =====================================
+       REGISTER
+       ===================================== */
+    public function register(string $nom, string $email, string $password, string $confirm): bool
+    {
+        if ($nom === '' || $email === '' || $password === '' || $confirm === '') {
+            $_SESSION['auth_error'] = "Veuillez remplir tous les champs.";
+            return false;
+        }
+
+        if ($password !== $confirm) {
+            $_SESSION['auth_error'] = "Les mots de passe ne correspondent pas.";
+            return false;
+        }
+
+        // Check if email already exists
+        if ($this->userModel->findByEmail($email)) {
+            $_SESSION['auth_error'] = "Un compte existe déjà avec cet email.";
+            return false;
+        }
+
+        // Hash password
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+
+        // Create new user (role = user by default)
+        $this->userModel->create($nom, $email, $hash, 'user');
+
+        $_SESSION['auth_success'] = "Compte créé avec succès. Vous pouvez vous connecter.";
+        return true;
+    }
+
+    /* =====================================
+       LOGOUT
+       ===================================== */
+    public function logout()
+    {
+        session_destroy();
+        header("Location: /auth/login.php");
         exit;
-    } else {
-        $_SESSION['auth_error'] = 'Identifiants incorrects.';
-        header('Location: /auth/login.php');
+    }
+
+    /* =====================================
+       REDIRECTION DASHBOARD SELON ROLE
+       ===================================== */
+    public function redirectDashboard(string $role)
+    {
+        switch ($role) {
+            case 'admin':
+                header("Location: /admin/admin-dashboard.php");
+                break;
+
+            case 'agent':
+                header("Location: /agent/agent-dashboard.php");
+                break;
+
+            case 'user':
+                header("Location: /user/dashboard.php");
+                break;
+
+            default:
+                header("Location: /auth/login.php");
+        }
         exit;
+    }
+
+    /* =====================================
+       Middleware-like: Require User Logged
+       ===================================== */
+    public static function requireLogin(): void
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        if (empty($_SESSION['user_id'])) {
+            header("Location: /auth/login.php");
+            exit;
+        }
+    }
+
+    /* =====================================
+       Require specific role
+       ===================================== */
+    public static function requireRole(string $role): void
+    {
+        self::requireLogin();
+
+        if ($_SESSION['user_role'] !== $role) {
+            header("Location: /admin/unauthorized.php");
+            exit;
+        }
     }
 }
-
-if ($action === 'register') {
-    $nom = trim($_POST['nom_complet'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $confirm = $_POST['confirm_password'] ?? '';
-
-    if ($nom === '' || $email === '' || $password === '' || $confirm === '') {
-        $_SESSION['auth_error'] = 'Veuillez remplir tous les champs.';
-        header('Location: /auth/register.php');
-        exit;
-    }
-    if ($password !== $confirm) {
-        $_SESSION['auth_error'] = 'Les mots de passe ne correspondent pas.';
-        header('Location: /auth/register.php');
-        exit;
-    }
-
-    $userModel = new User(Database::getConnection());
-    $existing = $userModel->findByEmail($email);
-    if ($existing) {
-        $_SESSION['auth_error'] = 'Un compte existe déjà avec cet e-mail.';
-        header('Location: /auth/register.php');
-        exit;
-    }
-
-    $hash = password_hash($password, PASSWORD_DEFAULT);
-    $userModel->create($nom, $email, $hash, 'user');
-
-    $_SESSION['auth_success'] = 'Compte créé, vous pouvez maintenant vous connecter.';
-    header('Location: /auth/register.php');
-    exit;
-}
-
-header('Location: /auth/login.php');
-exit;
 ?>

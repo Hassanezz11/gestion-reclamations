@@ -1,35 +1,81 @@
 <?php
 session_start();
 
-$page_title = "Accès non autorisé";
+$page_title = "Accès Non Autorisé";
+$active_menu = "";
+
+// If user is not logged in → use simple layout
+$isLogged = isset($_SESSION['user_id']);
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($page_title) ?></title>
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <link rel="stylesheet" href="../assets/css/dashboard.css">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="auth-body">
 
-<div class="auth-container">
-    <div class="auth-card">
-        <div class="auth-header">
-            <h1><i class="fas fa-lock"></i> Accès non autorisé</h1>
-            <p>Vous n’avez pas les droits nécessaires pour accéder à cette page.</p>
-        </div>
+<?php if ($isLogged): ?>
+    <?php include 'includes/admin-header.php'; ?>
+<?php endif; ?>
 
-        <div style="text-align:center; margin-top:1rem;">
-            <a href="../index.php" class="btn btn-primary btn-full">
-                <i class="fas fa-home"></i>&nbsp; Retour au tableau de bord
-            </a>
-        </div>
-    </div>
+<div class="layout">
+
+    <?php if ($isLogged): ?>
+        <?php include 'includes/admin-sidebar.php'; ?>
+    <?php endif; ?>
+
+    <main class="main">
+
+        <section style="text-align:center; padding:80px 20px;">
+
+            <div style="
+                max-width: 500px;
+                margin: auto;
+                padding: 40px;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+            ">
+
+                <i class="fas fa-lock" style="font-size: 64px; color: #e63946;"></i>
+
+                <h1 style="margin-top:20px; font-size:32px; font-weight:700;">
+                    Accès Refusé
+                </h1>
+
+                <p style="font-size:17px; color:#555; margin-top:10px;">
+                    Vous n’avez pas la permission d’accéder à cette page.
+                </p>
+
+                <?php if ($isLogged): ?>
+                    <p style="margin:10px 0; font-size:15px;">
+                        Rôle connecté :
+                        <strong><?= htmlspecialchars($_SESSION['user_role']) ?></strong>
+                    </p>
+
+                    <?php if ($_SESSION['user_role'] === 'admin'): ?>
+                        <a href="admin-dashboard.php" class="btn btn-primary" style="margin-top:20px;">
+                            Retour au Tableau de Bord
+                        </a>
+                    <?php elseif ($_SESSION['user_role'] === 'agent'): ?>
+                        <a href="../agent/agent-dashboard.php" class="btn btn-primary" style="margin-top:20px;">
+                            Retour à l’Espace Agent
+                        </a>
+                    <?php else: ?>
+                        <a href="../user/user-dashboard.php" class="btn btn-primary" style="margin-top:20px;">
+                            Retour à votre Espace
+                        </a>
+                    <?php endif; ?>
+
+                <?php else: ?>
+
+                    <a href="../auth/login.php" class="btn btn-primary" style="margin-top:20px;">
+                        Se connecter
+                    </a>
+
+                <?php endif; ?>
+
+            </div>
+
+        </section>
+
+    </main>
 </div>
 
-</body>
-</html>
+<?php if ($isLogged): ?>
+    <?php include 'includes/admin-footer.php'; ?>
+<?php endif; ?>

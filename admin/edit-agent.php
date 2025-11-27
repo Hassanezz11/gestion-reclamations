@@ -1,63 +1,106 @@
 <?php
 session_start();
 
-$page_title  = "Fiche Agent";
+$page_title  = "Modifier Agent";
 $active_menu = "agents";
+
+require_once __DIR__ . '/../php/database.php';
+require_once __DIR__ . '/../php/models/User.php';
+
+$pdo = Database::getInstance();
+$userModel = new User($pdo);
+
+$success = $error = "";
+$agentId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+// Get agent info
+$agent = $userModel->findById($agentId);
+
+if (!$agent || $agent['role'] !== 'agent') {
+    die("<h2>Agent introuvable.</h2>");
+}
+
+// Process update
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    $nom       = trim($_POST['nom_complet'] ?? "");
+    $email     = trim($_POST['email'] ?? "");
+    $telephone = trim($_POST['telephone'] ?? "");
+    $password  = trim($_POST['password'] ?? "");
+
+    if ($nom === "" || $email === "") {
+        $error = "Veuillez remplir tous les champs obligatoires.";
+    } else {
+
+        // Update base info
+        $stmt = $pdo->prepare("
+            UPDATE utilisateurs 
+            SET nom_complet = ?, email = ?, telephone = ?
+            WHERE id = ? AND role = 'agent'
+        ");
+        $stmt->execute([$nom, $email, $telephone, $agentId]);
+
+        // Update password if provided
+        if ($password !== "") {
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+            $pdo->prepare("UPDATE utilisateurs SET mot_de_passe=? WHERE id=?")
+                ->execute([$hash, $agentId]);
+        }
+
+        $success = "Informations mises à jour.";
+        $agent = $userModel->findById($agentId); // refresh data
+    }
+}
 
 include 'includes/admin-header.php';
 ?>
 
 <div class="layout">
+
     <?php include 'includes/admin-sidebar.php'; ?>
 
     <main class="main">
 
         <header class="topbar">
             <div>
-                <h1>Fiche Agent</h1>
-                <p class="topbar-subtitle">Créer ou modifier les informations d’un agent de support.</p>
-            </div>
-
-            <div class="topbar-user">
-                <img src="../images/logo.png" alt="Avatar" class="avatar-circle">
-                <div>
-                    <span class="topbar-username"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Admin') ?></span>
-                    <span class="topbar-role">Administrateur</span>
-                </div>
+                <h1>Modifier Agent</h1>
+                <p class="topbar-subtitle">Modifier les informations d’un agent.</p>
             </div>
         </header>
 
         <section class="content">
 
-            <div class="card" style="max-width: 720px; margin: 0 auto;">
+            <div class="card" style="max-width:700px; margin:auto;">
                 <div class="card-header">
-                    <h2>Détails de l’agent</h2>
+                    <h2><?= htmlspecialchars($agent['nom_complet']) ?></h2>
                 </div>
 
-                <form>
+                <?php if ($success): ?>
+                    <div class="alert alert-success"><?= $success ?></div>
+                <?php endif; ?>
+
+                <?php if ($error): ?>
+                    <div class="alert alert-danger"><?= $error ?></div>
+                <?php endif; ?>
+
+                <form method="POST">
+
                     <div class="form-group">
-                        <label>Nom complet</label>
+                        <label>Nom complet *</label>
                         <input type="text" class="input-text" name="nom_complet"
-                               placeholder="Nom et prénom de l’agent">
+                               value="<?= htmlspecialchars($agent['nom_complet']) ?>" required>
                     </div>
 
                     <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" class="input-text" name="email" placeholder="agent@exemple.com">
+                        <label>Email *</label>
+                        <input type="email" class="input-text" name="email"
+                               value="<?= htmlspecialchars($agent['email']) ?>" required>
                     </div>
 
                     <div class="form-group">
                         <label>Téléphone</label>
-                        <input type="text" class="input-text" name="telephone" placeholder="+212 6 ...">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Statut</label>
-                        <select class="input-select" name="statut">
-                            <option>Actif</option>
-                            <option>En pause</option>
-                            <option>Désactivé</option>
-                        </select>
+                        <input type="text" class="input-text" name="telephone"
+                               value="<?= htmlspecialchars($agent['telephone'] ?? '') ?>">
                     </div>
 
                     <div class="form-group">
@@ -66,14 +109,16 @@ include 'includes/admin-header.php';
                     </div>
 
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i>&nbsp; Enregistrer
+                        <button class="btn btn-primary">
+                            <i class="fas fa-save"></i> Enregistrer
                         </button>
                         <button type="button" class="btn btn-secondary" onclick="history.back()">
                             Annuler
                         </button>
                     </div>
+
                 </form>
+
             </div>
 
         </section>

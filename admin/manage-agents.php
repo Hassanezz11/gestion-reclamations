@@ -1,14 +1,30 @@
 <?php
 session_start();
-
 $page_title  = "Gestion des Agents";
 $active_menu = "agents";
+
+require_once __DIR__ . '/../php/database.php';
+require_once __DIR__ . '/../php/models/User.php';
+require_once __DIR__ . '/../php/models/Affectation.php';
+
+$pdo = Database::getInstance();
+$userModel = new User($pdo);
+$affModel  = new Affectation($pdo);
+
+// DELETE agent
+if (isset($_GET['delete'])) {
+    $id = (int) $_GET['delete'];
+    $pdo->prepare("DELETE FROM utilisateurs WHERE id = ? AND role = 'agent'")->execute([$id]);
+    header("Location: manage-agents.php?success=1");
+    exit;
+}
+
+$agents = $userModel->getAllAgents();
 
 include 'includes/admin-header.php';
 ?>
 
 <div class="layout">
-
     <?php include 'includes/admin-sidebar.php'; ?>
 
     <main class="main">
@@ -16,15 +32,7 @@ include 'includes/admin-header.php';
         <header class="topbar">
             <div>
                 <h1>Gestion des Agents</h1>
-                <p class="topbar-subtitle">Ajouter, modifier et suivre les agents en charge des réclamations.</p>
-            </div>
-
-            <div class="topbar-user">
-                <img src="../images/logo.png" alt="Avatar" class="avatar-circle">
-                <div>
-                    <span class="topbar-username"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Admin') ?></span>
-                    <span class="topbar-role">Administrateur</span>
-                </div>
+                <p class="topbar-subtitle">Ajouter, modifier et suivre les agents du support.</p>
             </div>
         </header>
 
@@ -32,19 +40,15 @@ include 'includes/admin-header.php';
 
             <div class="card card-toolbar">
                 <div class="card-toolbar-left">
-                    <button class="btn btn-primary btn-sm" onclick="window.location.href='edit-agent.php'">
-                        <i class="fas fa-user-plus"></i>&nbsp; Nouvel agent
-                    </button>
-                </div>
-                <div class="card-toolbar-right">
-                    <input type="text" class="input-search" placeholder="Rechercher un agent...">
+                    <a href="add-agent.php" class="btn btn-primary btn-sm">
+                        <i class="fas fa-user-plus"></i> &nbsp; Nouvel agent
+                    </a>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <h2>Liste des agents</h2>
-                    <span class="badge badge-normal">Démo statique</span>
+                    <h2>Liste des Agents</h2>
                 </div>
 
                 <div class="table-responsive">
@@ -54,45 +58,40 @@ include 'includes/admin-header.php';
                             <th>Nom complet</th>
                             <th>Email</th>
                             <th>Téléphone</th>
-                            <th>Réclamations en cours</th>
-                            <th>Statut</th>
-                            <th style="width: 160px;">Actions</th>
+                            <th>Réclamations assignées</th>
+                            <th style="width:160px;">Actions</th>
                         </tr>
                         </thead>
+
                         <tbody>
-                        <tr>
-                            <td>Youssef El Arabi</td>
-                            <td>youssef@example.com</td>
-                            <td>+212 6 12 34 56 78</td>
-                            <td>8</td>
-                            <td><span class="badge badge-success">Actif</span></td>
-                            <td class="table-actions">
-                                <button class="btn btn-secondary btn-sm" onclick="window.location.href='edit-agent.php'">
-                                    <i class="fas fa-pen"></i>
-                                </button>
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Imane Chafik</td>
-                            <td>imane@example.com</td>
-                            <td>+212 6 98 76 54 32</td>
-                            <td>3</td>
-                            <td><span class="badge badge-warning">En pause</span></td>
-                            <td class="table-actions">
-                                <button class="btn btn-secondary btn-sm">
-                                    <i class="fas fa-pen"></i>
-                                </button>
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
+                        <?php foreach ($agents as $a): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($a['nom_complet']) ?></td>
+                                <td><?= htmlspecialchars($a['email']) ?></td>
+                                <td><?= htmlspecialchars($a['telephone'] ?? '—') ?></td>
+                                <td>
+                                    <?= $affModel->countByAgent($a['id']) ?>
+                                </td>
+
+                                <td class="table-actions">
+                                    <a class="btn btn-secondary btn-sm"
+                                       href="edit-agent.php?id=<?= $a['id'] ?>">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+
+                                    <a class="btn btn-danger btn-sm"
+                                       onclick="return confirm('Supprimer cet agent ?')"
+                                       href="manage-agents.php?delete=<?= $a['id'] ?>">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
                         </tbody>
+
                     </table>
                 </div>
+
             </div>
 
         </section>

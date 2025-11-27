@@ -1,40 +1,32 @@
 <?php
-require_once __DIR__ . '/../database.php';
-
 class Remark
 {
-    private $pdo;
+    private PDO $pdo;
 
-    public function __construct(?PDO $pdo = null)
+    public function __construct(PDO $pdo)
     {
-        $this->pdo = $pdo ?? Database::getInstance();
+        $this->pdo = $pdo;
     }
 
-    public function add(int $reclam_id, int $agent_id, string $statut, string $remarque): bool
+    public function add(int $recId, int $agentId, string $status, string $remark): bool
     {
-        $sql = "INSERT INTO remarques_reclamation (
-                    reclamation_id, utilisateur_id, statut, remarque
-                ) VALUES (:rec, :agent, :statut, :remarque)";
-        $stmt = $this->pdo->prepare($sql);
-
-        return $stmt->execute([
-            ':rec'      => $reclam_id,
-            ':agent'    => $agent_id,
-            ':statut'   => $statut,
-            ':remarque' => $remarque,
-        ]);
+        $stmt = $this->pdo->prepare("
+            INSERT INTO remarques_reclamation (reclamation_id, utilisateur_id, statut, remarque)
+            VALUES (?, ?, ?, ?)
+        ");
+        return $stmt->execute([$recId, $agentId, $status, $remark]);
     }
 
-    public function getByReclamation(int $reclam_id): array
+    public function getByReclamation(int $recId): array
     {
-        $sql = "SELECT rr.*, u.nom_complet AS agent_nom
-                FROM remarques_reclamation rr
-                JOIN utilisateurs u ON u.id = rr.utilisateur_id
-                WHERE rr.reclamation_id = :rec
-                ORDER BY rr.date_creation DESC";
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([':rec' => $reclam_id]);
+        $stmt = $this->pdo->prepare("
+            SELECT rr.*, u.nom_complet
+            FROM remarques_reclamation rr
+            JOIN utilisateurs u ON u.id = rr.utilisateur_id
+            WHERE rr.reclamation_id=?
+            ORDER BY rr.date_creation DESC
+        ");
+        $stmt->execute([$recId]);
         return $stmt->fetchAll();
     }
 }

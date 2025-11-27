@@ -114,6 +114,7 @@
 }
 
 /* STAT CARDS */
+/* STAT CARDS */
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -125,11 +126,29 @@
   margin-bottom: 0.3rem;
 }
 
+/* Base style for the big numbers */
 .stat-number {
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 700;
   margin: 0.4rem 0;
+  padding: 8px 14px;
+  border-radius: 8px;
+  display: inline-block;
 }
+
+/* En attente */
+.stat-warning {
+  background-color: #FEF3C7;  /* light amber */
+  color: #92400E;             /* dark amber */
+}
+
+/* Résolues */
+.stat-success {
+  background-color: #DCFCE7;  /* light green */
+  color: #166534;             /* dark green */
+}
+
+
 
 /* =======================
    TABLES
@@ -175,17 +194,35 @@
 ======================= */
 
 .badge {
-  padding: 0.35rem 0.7rem;
-  border-radius: 0.4rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: white;
+    display: inline-block;
 }
 
-.badge-success { background: #16a34a; }
-.badge-danger { background: #dc2626; }
-.badge-warning { background: #f59e0b; }
-.badge-normal { background: #4b5563; }
+/* Priorité */
+.badge.haute {
+    background-color: #e63946;
+}
+.badge.moyenne {
+    background-color: #f4a261;
+}
+.badge.faible {
+    background-color: #2a9d8f;
+}
+
+/* Statut */
+.badge.non_assignee {
+    background-color: #6c757d; /* gris */
+}
+.badge.en_cours {
+    background-color: #f4a261; /* orange */
+}
+.badge.resolue {
+    background-color: #2a9d8f; /* green */
+}
+
 
 /* =======================
    FORMS

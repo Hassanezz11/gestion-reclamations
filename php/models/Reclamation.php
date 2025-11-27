@@ -1,113 +1,117 @@
 <?php
-require_once __DIR__ . '/../database.php';
-
 class Reclamation
 {
-    private $pdo;
+    private PDO $pdo;
 
-    public function __construct(?PDO $pdo = null)
+    public function __construct(PDO $pdo)
     {
-        $this->pdo = $pdo ?? Database::getInstance();
-    }
-
-    public function create(array $data): bool
-    {
-        $sql = "INSERT INTO reclamations (
-                    utilisateur_id, categorie_id, sous_categorie_id,
-                    objet, description, piece_jointe, priorite, statut
-                )
-                VALUES (
-                    :user_id, :cat_id, :scat_id,
-                    :objet, :description, :piece, :priorite, :statut
-                )";
-
-        $stmt = $this->pdo->prepare($sql);
-
-        return $stmt->execute([
-            ':user_id'     => $data['utilisateur_id'],
-            ':cat_id'      => $data['categorie_id'],
-            ':scat_id'     => $data['sous_categorie_id'],
-            ':objet'       => $data['objet'],
-            ':description' => $data['description'],
-            ':piece'       => $data['piece_jointe'] ?? null,
-            ':priorite'    => $data['priorite'] ?? 'moyenne',
-            ':statut'      => $data['statut'] ?? 'non_assignee',
-        ]);
-    }
-
-    public function find(int $id): ?array
-    {
-        $stmt = $this->pdo->prepare(
-            "SELECT r.*, u.nom_complet AS nom_utilisateur
-             FROM reclamations r
-             JOIN utilisateurs u ON u.id = r.utilisateur_id
-             WHERE r.id = :id"
-        );
-        $stmt->execute([':id' => $id]);
-        $row = $stmt->fetch();
-        return $row ?: null;
-    }
-
-    public function getByUser(int $user_id): array
-    {
-        $stmt = $this->pdo->prepare(
-            "SELECT * FROM reclamations
-             WHERE utilisateur_id = :id
-             ORDER BY date_creation DESC"
-        );
-        $stmt->execute([':id' => $user_id]);
-        return $stmt->fetchAll();
+        $this->pdo = $pdo;
     }
 
     public function getAll(): array
     {
-        $sql = "SELECT r.*, u.nom_complet AS nom_utilisateur
-                FROM reclamations r
-                JOIN utilisateurs u ON u.id = r.utilisateur_id
-                ORDER BY r.date_creation DESC";
-        return $this->pdo->query($sql)->fetchAll();
+        return $this->pdo->query("
+            SELECT r.*, u.nom_complet AS client
+            FROM reclamations r
+            LEFT JOIN utilisateurs u ON u.id = r.utilisateur_id
+            ORDER BY r.date_creation DESC
+        ")->fetchAll();
     }
 
-    public function getAssignedToAgent(int $agent_id): array
+    public function search(string $q): array
     {
-        $sql = "SELECT r.*
-                FROM reclamations r
-                JOIN affectations a ON a.reclamation_id = r.id
-                WHERE a.agent_id = :agent
-                ORDER BY r.date_creation DESC";
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([':agent' => $agent_id]);
+        $stmt = $this->pdo->prepare("
+            SELECT r.*, u.nom_complet AS client
+            FROM reclamations r
+            JOIN utilisateurs u ON u.id = r.utilisateur_id
+            WHERE u.nom_complet LIKE :q OR r.objet LIKE :q
+            ORDER BY r.date_creation DESC
+        ");
+        $stmt->execute([':q' => "%$q%"]);
         return $stmt->fetchAll();
     }
 
-    public function updateStatus(int $id, string $statut): bool
+    public function getById(int $id): ?array
     {
-        $sql = "UPDATE reclamations
-                SET statut = :statut, date_mise_a_jour = NOW()
-                WHERE id = :id";
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute([':statut' => $statut, ':id' => $id]);
+        $stmt = $this->pdo->prepare("
+            SELECT r.*, u.nom_complet AS client
+            FROM reclamations r
+            JOIN utilisateurs u ON u.id = r.utilisateur_id
+            WHERE r.id = ?
+        ");
+        $stmt->execute([$id]);
+        return $stmt->fetch() ?: null;
     }
 
-    public function update(int $id, array $data): bool
+    public function updateStatus(int $id, string $status): bool
     {
-        $sql = "UPDATE reclamations
-                SET objet = :objet,
-                    description = :description,
-                    priorite = :priorite,
-                    statut = :statut,
-                    date_mise_a_jour = NOW()
-                WHERE id = :id";
+        $stmt = $this->pdo->prepare("UPDATE reclamations SET statut=?, date_mise_a_jour=NOW() WHERE id=?");
+        return $stmt->execute([$status, $id]);
+    }
+    public function countByStatus(string $status): int
+    {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM reclamations WHERE statut = ?");
+        $stmt->execute([$status]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function getRecent(int $limit = 5): array
+    {
+        $sql = "
+            SELECT 
+                r.*,
+                u.nom_complet AS client,
+                COALESCE(ua.nom_complet, '—') AS agent
+            FROM reclamations r
+            JOIN utilisateurs u ON u.id = r.utilisateur_id
+            LEFT JOIN affectations a ON a.reclamation_id = r.id
+            LEFT JOIN utilisateurs ua ON ua.id = a.agent_id
+            ORDER BY r.date_creation DESC
+            LIMIT :limit
+        ";
 
         $stmt = $this->pdo->prepare($sql);
-
-        return $stmt->execute([
-            ':objet'       => $data['objet'],
-            ':description' => $data['description'],
-            ':priorite'    => $data['priorite'],
-            ':statut'      => $data['statut'],
-            ':id'          => $id,
-        ]);
-    }
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
 }
+
+    
+    public function getAllWithDetails(): array
+    {
+        $sql = "
+            SELECT 
+                r.*,
+                u.nom_complet AS client,
+                c.nom AS categorie,
+                sc.nom AS sous_categorie,
+                ua.nom_complet AS agent
+            FROM reclamations r
+            JOIN utilisateurs u ON u.id = r.utilisateur_id
+            LEFT JOIN categories c ON c.id = r.categorie_id
+            LEFT JOIN sous_categories sc ON sc.id = r.sous_categorie_id
+            LEFT JOIN affectations a ON a.reclamation_id = r.id
+            LEFT JOIN utilisateurs ua ON ua.id = a.agent_id
+            ORDER BY r.date_creation DESC
+        ";
+        return $this->pdo->query($sql)->fetchAll();
+    }
+
+    public function delete(int $id): bool
+    {
+        // supprimer les dépendances
+        $this->pdo->prepare("DELETE FROM messages WHERE reclamation_id = ?")->execute([$id]);
+        $this->pdo->prepare("DELETE FROM remarques_reclamation WHERE reclamation_id = ?")->execute([$id]);
+        $this->pdo->prepare("DELETE FROM affectations WHERE reclamation_id = ?")->execute([$id]);
+
+        $stmt = $this->pdo->prepare("DELETE FROM reclamations WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
+
+
+}
+
+
+
+

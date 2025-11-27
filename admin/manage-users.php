@@ -4,6 +4,23 @@ session_start();
 $page_title  = "Gestion des Utilisateurs";
 $active_menu = "users";
 
+require_once __DIR__ . '/../php/database.php';
+require_once __DIR__ . '/../php/models/User.php';
+require_once __DIR__ . '/../php/models/Reclamation.php';
+
+$pdo = Database::getInstance();
+$userModel = new User($pdo);
+$recModel  = new Reclamation($pdo);
+
+$search = trim($_GET['q'] ?? "");
+
+// GET USERS
+if ($search !== "") {
+    $users = $userModel->searchClients($search);
+} else {
+    $users = $userModel->getAllClients();
+}
+
 include 'includes/admin-header.php';
 ?>
 
@@ -15,30 +32,26 @@ include 'includes/admin-header.php';
         <header class="topbar">
             <div>
                 <h1>Gestion des Utilisateurs</h1>
-                <p class="topbar-subtitle">Visualisez et contrôlez les comptes clients de la plateforme.</p>
-            </div>
-
-            <div class="topbar-user">
-                <img src="../images/logo.png" alt="Avatar" class="avatar-circle">
-                <div>
-                    <span class="topbar-username"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Admin') ?></span>
-                    <span class="topbar-role">Administrateur</span>
-                </div>
             </div>
         </header>
 
         <section class="content">
 
             <div class="card card-toolbar">
-                <div class="card-toolbar-left">
-                    <select class="input-select">
-                        <option>Tous les statuts</option>
-                        <option>Actif</option>
-                        <option>Bloqué</option>
-                    </select>
-                </div>
                 <div class="card-toolbar-right">
-                    <input type="text" class="input-search" placeholder="Rechercher un utilisateur...">
+                    <form method="GET" style="display:flex; gap:0.5rem;">
+                        <input type="text"
+                               name="q"
+                               class="input-search"
+                               placeholder="Rechercher par nom ou email..."
+                               value="<?= htmlspecialchars($search) ?>">
+                        <button class="btn btn-secondary btn-sm">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <a href="manage-users.php" class="btn btn-light btn-sm">
+                            Réinitialiser
+                        </a>
+                    </form>
                 </div>
             </div>
 
@@ -53,48 +66,39 @@ include 'includes/admin-header.php';
                         <tr>
                             <th>Nom complet</th>
                             <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Adresse</th>
                             <th>Date d’inscription</th>
                             <th>Réclamations</th>
-                            <th>Statut</th>
-                            <th style="width: 160px;">Actions</th>
                         </tr>
                         </thead>
+
                         <tbody>
-                        <tr>
-                            <td>Fatima Zahra</td>
-                            <td>fatima@example.com</td>
-                            <td>01/10/2025</td>
-                            <td>5</td>
-                            <td><span class="badge badge-success">Actif</span></td>
-                            <td class="table-actions">
-                                <button class="btn btn-secondary btn-sm">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="fas fa-ban"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Oussama Idrissi</td>
-                            <td>oussama@example.com</td>
-                            <td>22/09/2025</td>
-                            <td>2</td>
-                            <td><span class="badge badge-danger">Bloqué</span></td>
-                            <td class="table-actions">
-                                <button class="btn btn-secondary btn-sm">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-success btn-sm">
-                                    <i class="fas fa-unlock"></i>
-                                </button>
-                            </td>
-                        </tr>
+                        <?php if (empty($users)): ?>
+                            <tr>
+                                <td colspan="6" style="text-align:center;">Aucun utilisateur trouvé.</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($users as $u): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($u['nom_complet']) ?></td>
+                                    <td><?= htmlspecialchars($u['email']) ?></td>
+                                    <td><?= htmlspecialchars($u['telephone'] ?? '—') ?></td>
+                                    <td><?= htmlspecialchars($u['adresse'] ?? '—') ?></td>
+                                    <td><?= htmlspecialchars($u['date_creation']) ?></td>
+                                    <td>
+                                        <?= $userModel->countReclamations($u['id']) ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                         </tbody>
+
                     </table>
                 </div>
 
             </div>
+
         </section>
 
     </main>

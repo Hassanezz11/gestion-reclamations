@@ -1,48 +1,41 @@
 <?php
-require_once __DIR__ . '/../database.php';
-
 class Category
 {
-    private $pdo;
+    private PDO $pdo;
 
-    public function __construct(?PDO $pdo = null)
+    public function __construct(PDO $pdo)
     {
-        $this->pdo = $pdo ?? Database::getInstance();
+        $this->pdo = $pdo;
     }
 
     public function getAll(): array
     {
-        $stmt = $this->pdo->query("SELECT * FROM categories ORDER BY nom");
-        return $stmt->fetchAll();
+        return $this->pdo->query("SELECT * FROM categories ORDER BY nom")->fetchAll();
     }
 
-    public function find(int $id): ?array
+    public function getById(int $id): ?array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM categories WHERE id = :id");
-        $stmt->execute([':id' => $id]);
-        $cat = $stmt->fetch();
-        return $cat ?: null;
+        $stmt = $this->pdo->prepare("SELECT * FROM categories WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch() ?: null;
     }
 
-    public function create(string $nom, ?string $description = null): bool
+    public function create(string $nom, ?string $description): bool
     {
-        $stmt = $this->pdo->prepare(
-            "INSERT INTO categories (nom, description) VALUES (:nom, :description)"
-        );
-        return $stmt->execute([':nom' => $nom, ':description' => $description]);
+        $stmt = $this->pdo->prepare("INSERT INTO categories (nom, description) VALUES (?, ?)");
+        return $stmt->execute([$nom, $description]);
     }
 
-    public function update(int $id, string $nom, ?string $description = null): bool
+    public function update(int $id, string $nom, ?string $description): bool
     {
-        $stmt = $this->pdo->prepare(
-            "UPDATE categories SET nom = :nom, description = :description WHERE id = :id"
-        );
-        return $stmt->execute([':nom' => $nom, ':description' => $description, ':id' => $id]);
+        $stmt = $this->pdo->prepare("UPDATE categories SET nom=?, description=? WHERE id=?");
+        return $stmt->execute([$nom, $description, $id]);
     }
 
     public function delete(int $id): bool
     {
-        $stmt = $this->pdo->prepare("DELETE FROM categories WHERE id = :id");
-        return $stmt->execute([':id' => $id]);
+        $this->pdo->prepare("DELETE FROM sous_categories WHERE categorie_id=?")->execute([$id]);
+        $stmt = $this->pdo->prepare("DELETE FROM categories WHERE id=?");
+        return $stmt->execute([$id]);
     }
 }
