@@ -68,4 +68,20 @@ class User
         $stmt->execute([$userId]);
         return (int)$stmt->fetchColumn();
     }
+    public function updateProfile(int $id, string $nom, string $email, ?string $tel, ?string $adresse): bool
+    {
+        $stmt = $this->pdo->prepare("
+            UPDATE utilisateurs 
+            SET nom_complet = ?, email = ?, telephone = ?, adresse = ?
+            WHERE id = ?
+        ");
+        return $stmt->execute([$nom, $email, $tel, $adresse, $id]);
+    }
+
+    public function updatePassword(int $id, string $hash): bool
+    {
+        $stmt = $this->pdo->prepare("UPDATE utilisateurs SET mot_de_passe = ? WHERE id = ?");
+        return $stmt->execute([$hash, $id]);
+    }
+
 }

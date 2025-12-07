@@ -1,22 +1,42 @@
 <?php
 session_start();
 
-// Simple front controller / redirector
-// $role = $_SESSION['user_role'] ?? null;
+$role = $_SESSION['user_role'] ?? null;
 
-// if ($role === 'admin') {
-//     header('Location: /admin/admin-dashboard.php');
-//     exit;
-// } elseif ($role === 'agent') {
-//     header('Location: /agent/agent-dashboard.php');
-//     exit;
-// } elseif ($role === 'user') {
-//     header('Location: /user/dashboard.php');
-//     exit;
-// } else {
-//     header('Location: /auth/login.php');
-//     exit;
-// }
+// Detect base path (works if the app is deployed in a subfolder)
+$basePath = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
+if ($basePath === '/') {
+    $basePath = '';
+}
+
+// Pick the first existing dashboard target for the current role
+$dashboardCandidates = [
+    'admin' => ['/admin/admin-dashboard.php'],
+    'agent' => ['/agent/agent-dashboard.php', '/agent/agent-dashboard.html'],
+    'user'  => ['/user/user-dashboard.php', '/user/user-dashboard.html'],
+];
+
+$dashboardUrl = null;
+if ($role && isset($dashboardCandidates[$role])) {
+    foreach ($dashboardCandidates[$role] as $candidate) {
+        $fsPath = __DIR__ . str_replace('/', DIRECTORY_SEPARATOR, $candidate);
+        if (file_exists($fsPath)) {
+            $dashboardUrl = $basePath . $candidate;
+            break;
+        }
+    }
+}
+
+$loginUrl    = $basePath . '/auth/login.php';
+$registerUrl = $basePath . '/auth/register.php';
+$logoutUrl   = $basePath . '/auth/logout.php';
+$homeUrl     = $basePath === '' ? '/' : $basePath . '/';
+
+// If already logged in, send the user to their dashboard
+if ($dashboardUrl) {
+    header('Location: ' . $dashboardUrl);
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -24,7 +44,7 @@ session_start();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Réclamations - Accueil</title>
-    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars($basePath) ?>/assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -35,10 +55,15 @@ session_start();
                 <span>ReclamPro</span>
             </div>
             <nav class="nav-menu">
-                <a href="index.html" class="nav-link active">Accueil</a>
-                <a href="about.html" class="nav-link">À propos</a>
-                <a href="login.html" class="nav-link">Connexion</a>
-                <a href="register.html" class="nav-link btn-primary">S'inscrire</a>
+                <a href="<?= htmlspecialchars($homeUrl) ?>" class="nav-link active">Accueil</a>
+                <a href="#features" class="nav-link">Fonctionnalités</a>
+                <?php if ($dashboardUrl): ?>
+                    <a href="<?= htmlspecialchars($dashboardUrl) ?>" class="nav-link">Tableau de bord</a>
+                    <a href="<?= htmlspecialchars($logoutUrl) ?>" class="nav-link">Déconnexion</a>
+                <?php else: ?>
+                    <a href="<?= htmlspecialchars($loginUrl) ?>" class="nav-link">Connexion</a>
+                    <a href="<?= htmlspecialchars($registerUrl) ?>" class="nav-link btn-primary">S'inscrire</a>
+                <?php endif; ?>
             </nav>
         </div>
     </header>
@@ -47,10 +72,15 @@ session_start();
         <section class="hero">
             <div class="hero-content">
                 <h1>Gestion Simplifiée des Réclamations</h1>
-                <p>Suivez, gérez et résolvez vos réclamations facilement et rapidement</p>
+                <p>Suivez, gérez et résolvez vos réclamations facilement et rapidement.</p>
                 <div class="hero-buttons">
-                    <a href="register.html" class="btn btn-lg btn-primary">Démarrer maintenant</a>
-                    <a href="about.html" class="btn btn-lg btn-secondary">En savoir plus</a>
+                    <?php if ($dashboardUrl): ?>
+                        <a href="<?= htmlspecialchars($dashboardUrl) ?>" class="btn btn-lg btn-primary">Accéder à mon tableau de bord</a>
+                        <a href="<?= htmlspecialchars($logoutUrl) ?>" class="btn btn-lg btn-secondary">Se déconnecter</a>
+                    <?php else: ?>
+                        <a href="<?= htmlspecialchars($registerUrl) ?>" class="btn btn-lg btn-primary">Démarrer maintenant</a>
+                        <a href="<?= htmlspecialchars($loginUrl) ?>" class="btn btn-lg btn-secondary">Déjà inscrit ? Connexion</a>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="hero-image">
@@ -58,37 +88,41 @@ session_start();
             </div>
         </section>
 
-        <section class="features">
+        <section class="features" id="features">
             <h2>Nos Fonctionnalités</h2>
             <div class="features-grid">
                 <div class="feature-card">
                     <i class="fas fa-pencil-alt"></i>
                     <h3>Soumettre une Réclamation</h3>
-                    <p>Créez et soumettez vos réclamations facilement avec tous les détails nécessaires</p>
+                    <p>Créez et soumettez vos réclamations facilement avec tous les détails nécessaires.</p>
                 </div>
                 <div class="feature-card">
                     <i class="fas fa-eye"></i>
                     <h3>Suivi en Temps Réel</h3>
-                    <p>Suivez l'état de vos réclamations à chaque étape du processus</p>
+                    <p>Suivez l'état de vos réclamations à chaque étape du processus.</p>
                 </div>
                 <div class="feature-card">
                     <i class="fas fa-comments"></i>
                     <h3>Communication Directe</h3>
-                    <p>Communiquez avec nos agents pour clarifier ou obtenir des mises à jour</p>
+                    <p>Communiquez avec nos agents pour clarifier ou obtenir des mises à jour.</p>
                 </div>
                 <div class="feature-card">
                     <i class="fas fa-chart-bar"></i>
                     <h3>Gestion Avancée</h3>
-                    <p>Les agents et administrateurs gèrent efficacement toutes les réclamations</p>
+                    <p>Les agents et administrateurs gèrent efficacement toutes les réclamations.</p>
                 </div>
             </div>
         </section>
 
         <section class="cta">
             <div class="cta-content">
-                <h2>Prêt à commencer?</h2>
-                <p>Rejoignez nos utilisateurs satisfaits et gérez vos réclamations efficacement</p>
-                <a href="register.html" class="btn btn-lg btn-primary">S'inscrire maintenant</a>
+                <h2>Prêt à commencer ?</h2>
+                <p>Rejoignez nos utilisateurs satisfaits et gérez vos réclamations efficacement.</p>
+                <?php if ($dashboardUrl): ?>
+                    <a href="<?= htmlspecialchars($dashboardUrl) ?>" class="btn btn-lg btn-primary">Ouvrir mon espace</a>
+                <?php else: ?>
+                    <a href="<?= htmlspecialchars($registerUrl) ?>" class="btn btn-lg btn-primary">S'inscrire maintenant</a>
+                <?php endif; ?>
             </div>
         </section>
     </main>

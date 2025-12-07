@@ -41,13 +41,13 @@ include 'includes/admin-header.php';
             </div>
 
             <div class="topbar-user">
-                <img src="../images/logo.png" class="avatar-circle">
+                <img src="../assets/images/logo.png" class="avatar-circle">
 
                 <div>
                     <span class="topbar-username">
                         <?= htmlspecialchars($_SESSION['user_name'] ?? 'Admin') ?>
                     </span>
-                    <span class="topbar-role">Administrateur</span>
+                    <!-- <span class="topbar-role">Administrateur</span> -->
                 </div>
             </div>
         </header>

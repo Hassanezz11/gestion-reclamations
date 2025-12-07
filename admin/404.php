@@ -18,7 +18,7 @@
             <p style="color: var(--text-secondary); margin: 20px 0;">Désolé, la page que vous recherchez n'existe pas ou a été supprimée.</p>
             
             <div style="margin-top: 30px;">
-                <a href="admin-dashboard.php" class="btn btn-primary">Retour au Tableau de Bord</a>
+                <a href="admin-dashboard.php    " class="btn btn-primary">Retour au Tableau de Bord</a>
             </div>
         </div>
     </div>

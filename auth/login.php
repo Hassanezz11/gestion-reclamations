@@ -1,15 +1,17 @@
 <?php
 session_start();
 $error = $_SESSION['auth_error'] ?? null;
-unset($_SESSION['auth_error']);
+$success = $_SESSION['auth_success'] ?? null;
+unset($_SESSION['auth_error'], $_SESSION['auth_success']);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <title>Connexion - Gestion des Réclamations</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/auth.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/auth.css">
+
 </head>
 <body class="auth-body">
   <div class="auth-container">
@@ -22,6 +24,12 @@ unset($_SESSION['auth_error']);
       <?php if ($error): ?>
         <div class="auth-alert auth-alert-error">
           <?= htmlspecialchars($error) ?>
+        </div>
+      <?php endif; ?>
+      
+      <?php if ($success): ?>
+        <div class="auth-alert auth-alert-success">
+          <?= htmlspecialchars($success) ?>
         </div>
       <?php endif; ?>
 
@@ -41,7 +49,7 @@ unset($_SESSION['auth_error']);
 
       <div class="auth-footer-text">
         <span>Pas encore de compte ?</span>
-        <a href="/auth/register.php">Créer un compte</a>
+        <a href="register.php">Créer un compte</a>
       </div>
     </div>
   </div>

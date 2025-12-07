@@ -1,9 +1,9 @@
 <?php
 session_start();
-$page_title  = "Profil Administrateur";
+$page_title  = "Mon Profil";
 $active_menu = "profile";
 
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'user') {
     header("Location: /auth/login.php");
     exit;
 }
@@ -14,13 +14,8 @@ require_once __DIR__ . '/../php/models/User.php';
 $pdo = Database::getInstance();
 $userModel = new User($pdo);
 
-$userId = $_SESSION['user_id'] ?? null;
-if (!$userId) {
-    header("Location: /auth/login.php");
-    exit;
-}
-
-$admin  = $userModel->findById($userId);
+$userId = $_SESSION['user_id'];
+$user = $userModel->findById($userId);
 
 $success = $error = "";
 
@@ -35,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($nom === "" || $email === "") {
         $error = "Veuillez remplir les champs obligatoires.";
     } else {
+
         $userModel->updateProfile($userId, $nom, $email, $tel, $adresse);
 
         if ($password !== "") {
@@ -43,22 +39,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $_SESSION['user_name'] = $nom;
-        $success = "Profil mis à jour avec succès.";
+        $success = "Profil mis à jour.";
     }
 
-    $admin = $userModel->findById($userId); // refresh
+    $user = $userModel->findById($userId); // refresh
 }
 
-include 'includes/admin-header.php';
+include __DIR__ . '/includes/user-header.php';
 ?>
 
 <div class="layout">
-<?php include 'includes/admin-sidebar.php'; ?>
+
+<?php include __DIR__ . '/includes/user-sidebar.php'; ?>
+
 <main class="main">
 
     <header class="topbar">
-        <h1>Profil Administrateur</h1>
-        <p class="topbar-subtitle">Mettre à jour vos informations personnelles.</p>
+        <h1>Mon Profil</h1>
     </header>
 
     <section class="content">
@@ -71,24 +68,29 @@ include 'includes/admin-header.php';
             <div class="card-header"><h2>Mes informations</h2></div>
 
             <form method="POST">
+
                 <div class="form-group">
                     <label>Nom complet *</label>
-                    <input type="text" class="input-text" name="nom_complet" value="<?= htmlspecialchars($admin['nom_complet']) ?>">
+                    <input type="text" class="input-text" name="nom_complet"
+                           value="<?= htmlspecialchars($user['nom_complet']) ?>">
                 </div>
 
                 <div class="form-group">
                     <label>Email *</label>
-                    <input type="email" class="input-text" name="email" value="<?= htmlspecialchars($admin['email']) ?>">
+                    <input type="email" class="input-text" name="email"
+                           value="<?= htmlspecialchars($user['email']) ?>">
                 </div>
 
                 <div class="form-group">
                     <label>Téléphone</label>
-                    <input type="text" class="input-text" name="telephone" value="<?= htmlspecialchars($admin['telephone'] ?? '') ?>">
+                    <input type="text" class="input-text" name="telephone"
+                           value="<?= htmlspecialchars($user['telephone'] ?? '') ?>">
                 </div>
 
                 <div class="form-group">
                     <label>Adresse</label>
-                    <input type="text" class="input-text" name="adresse" value="<?= htmlspecialchars($admin['adresse'] ?? '') ?>">
+                    <input type="text" class="input-text" name="adresse"
+                           value="<?= htmlspecialchars($user['adresse'] ?? '') ?>">
                 </div>
 
                 <div class="form-group">
@@ -99,6 +101,7 @@ include 'includes/admin-header.php';
                 <div class="form-actions">
                     <button class="btn btn-primary">Mettre à jour</button>
                 </div>
+
             </form>
 
         </div>
@@ -106,6 +109,7 @@ include 'includes/admin-header.php';
     </section>
 
 </main>
+
 </div>
 
-<?php include 'includes/admin-footer.php'; ?>
+<?php include __DIR__ . '/includes/user-footer.php'; ?>

@@ -9,8 +9,8 @@ unset($_SESSION['auth_error'], $_SESSION['auth_success']);
 <head>
   <meta charset="UTF-8">
   <title>Inscription - Gestion des Réclamations</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/auth.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/auth.css">
 </head>
 <body class="auth-body">
   <div class="auth-container">

@@ -1,9 +1,10 @@
 <?php
 session_start();
-$page_title  = "Profil Administrateur";
+
+$page_title  = "Profil Agent";
 $active_menu = "profile";
 
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'agent') {
     header("Location: /auth/login.php");
     exit;
 }
@@ -14,13 +15,8 @@ require_once __DIR__ . '/../php/models/User.php';
 $pdo = Database::getInstance();
 $userModel = new User($pdo);
 
-$userId = $_SESSION['user_id'] ?? null;
-if (!$userId) {
-    header("Location: /auth/login.php");
-    exit;
-}
-
-$admin  = $userModel->findById($userId);
+$userId = $_SESSION['user_id'];
+$agent = $userModel->findById($userId);
 
 $success = $error = "";
 
@@ -29,13 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nom      = trim($_POST['nom_complet']);
     $email    = trim($_POST['email']);
     $tel      = trim($_POST['telephone']);
-    $adresse  = trim($_POST['adresse']);
     $password = trim($_POST['password']);
 
     if ($nom === "" || $email === "") {
         $error = "Veuillez remplir les champs obligatoires.";
     } else {
-        $userModel->updateProfile($userId, $nom, $email, $tel, $adresse);
+        $userModel->updateProfile($userId, $nom, $email, $tel, $agent['adresse']);
 
         if ($password !== "") {
             $hash = password_hash($password, PASSWORD_DEFAULT);
@@ -43,22 +38,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $_SESSION['user_name'] = $nom;
-        $success = "Profil mis à jour avec succès.";
+        $success = "Profil mis à jour.";
     }
 
-    $admin = $userModel->findById($userId); // refresh
+    $agent = $userModel->findById($userId); // refresh
 }
 
-include 'includes/admin-header.php';
+include __DIR__ . '/includes/agent-header.php';
 ?>
 
 <div class="layout">
-<?php include 'includes/admin-sidebar.php'; ?>
+<?php include __DIR__ . '/includes/agent-sidebar.php'; ?>
 <main class="main">
 
     <header class="topbar">
-        <h1>Profil Administrateur</h1>
-        <p class="topbar-subtitle">Mettre à jour vos informations personnelles.</p>
+        <h1>Profil Agent</h1>
+        <p class="topbar-subtitle">Modifier les informations de votre compte agent.</p>
     </header>
 
     <section class="content">
@@ -67,28 +62,26 @@ include 'includes/admin-header.php';
         <?php if ($error): ?><div class="alert alert-danger"><?= $error ?></div><?php endif; ?>
 
         <div class="card" style="max-width:700px;margin:auto;">
-
             <div class="card-header"><h2>Mes informations</h2></div>
 
             <form method="POST">
+
                 <div class="form-group">
                     <label>Nom complet *</label>
-                    <input type="text" class="input-text" name="nom_complet" value="<?= htmlspecialchars($admin['nom_complet']) ?>">
+                    <input type="text" class="input-text" name="nom_complet"
+                           value="<?= htmlspecialchars($agent['nom_complet']) ?>">
                 </div>
 
                 <div class="form-group">
                     <label>Email *</label>
-                    <input type="email" class="input-text" name="email" value="<?= htmlspecialchars($admin['email']) ?>">
+                    <input type="email" class="input-text" name="email"
+                           value="<?= htmlspecialchars($agent['email']) ?>">
                 </div>
 
                 <div class="form-group">
                     <label>Téléphone</label>
-                    <input type="text" class="input-text" name="telephone" value="<?= htmlspecialchars($admin['telephone'] ?? '') ?>">
-                </div>
-
-                <div class="form-group">
-                    <label>Adresse</label>
-                    <input type="text" class="input-text" name="adresse" value="<?= htmlspecialchars($admin['adresse'] ?? '') ?>">
+                    <input type="text" class="input-text" name="telephone"
+                           value="<?= htmlspecialchars($agent['telephone'] ?? '') ?>">
                 </div>
 
                 <div class="form-group">
@@ -97,8 +90,9 @@ include 'includes/admin-header.php';
                 </div>
 
                 <div class="form-actions">
-                    <button class="btn btn-primary">Mettre à jour</button>
+                    <button class="btn btn-primary">Enregistrer</button>
                 </div>
+
             </form>
 
         </div>
@@ -108,4 +102,4 @@ include 'includes/admin-header.php';
 </main>
 </div>
 
-<?php include 'includes/admin-footer.php'; ?>
+<?php include __DIR__ . '/includes/agent-footer.php'; ?>
