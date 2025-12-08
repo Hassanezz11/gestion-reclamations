@@ -9,6 +9,34 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'agent') {
 }
 
 $userName = $_SESSION['user_name'] ?? 'Agent';
+$agentId  = (int)($_SESSION['user_id'] ?? 0);
+
+require_once __DIR__ . '/../php/database.php';
+require_once __DIR__ . '/../php/models/Reclamation.php';
+
+$pdo = Database::getInstance();
+$reclamationModel = new Reclamation($pdo);
+
+$stats = $reclamationModel->countForAgentByStatus($agentId);
+$recentReclamations = $reclamationModel->getForAgent($agentId, null, null, 5);
+
+$stats += ['total' => $stats['total'] ?? array_sum($stats)];
+
+function statusBadge(string $status): string {
+    return match ($status) {
+        'en_cours' => '<span class="badge badge-info">En cours</span>',
+        'resolue' => '<span class="badge badge-success">Resolue</span>',
+        default => '<span class="badge badge-warning">En attente</span>',
+    };
+}
+
+function priorityBadge(string $priority): string {
+    return match ($priority) {
+        'haute' => '<span class="priority-badge priority-high">Haute</span>',
+        'faible' => '<span class="priority-badge priority-low">Faible</span>',
+        default => '<span class="priority-badge priority-medium">Moyenne</span>',
+    };
+}
 
 include __DIR__ . '/includes/agent-header.php';
 ?>
@@ -38,8 +66,8 @@ include __DIR__ . '/includes/agent-header.php';
                     <i class="fas fa-file-alt"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-label">Réclamations assignées</div>
-                    <div class="stat-value">12</div>
+                    <div class="stat-label">Reclamations assignees</div>
+                    <div class="stat-value"><?= htmlspecialchars($stats['total']) ?></div>
                 </div>
             </div>
 
@@ -49,7 +77,7 @@ include __DIR__ . '/includes/agent-header.php';
                 </div>
                 <div class="stat-content">
                     <div class="stat-label">En attente</div>
-                    <div class="stat-value">4</div>
+                    <div class="stat-value"><?= htmlspecialchars($stats['non_assignee']) ?></div>
                 </div>
             </div>
 
@@ -59,7 +87,7 @@ include __DIR__ . '/includes/agent-header.php';
                 </div>
                 <div class="stat-content">
                     <div class="stat-label">En cours</div>
-                    <div class="stat-value">5</div>
+                    <div class="stat-value"><?= htmlspecialchars($stats['en_cours']) ?></div>
                 </div>
             </div>
 
@@ -68,15 +96,15 @@ include __DIR__ . '/includes/agent-header.php';
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-label">Résolues</div>
-                    <div class="stat-value">3</div>
+                    <div class="stat-label">Resolues</div>
+                    <div class="stat-value"><?= htmlspecialchars($stats['resolue']) ?></div>
                 </div>
             </div>
         </div>
 
         <section class="section">
             <div class="section-header">
-                <h2>Réclamations à traiter</h2>
+                <h2>Reclamations a traiter</h2>
                 <a href="manage-reclamations.php" class="btn btn-primary">Voir tout</a>
             </div>
 
@@ -86,47 +114,33 @@ include __DIR__ . '/includes/agent-header.php';
                         <tr>
                             <th>ID</th>
                             <th>Client</th>
-                            <th>Catégorie</th>
+                            <th>Categorie</th>
                             <th>Date</th>
-                            <th>Priorité</th>
+                            <th>Priorite</th>
                             <th>Statut</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>#REC-2025-005</td>
-                            <td>Sophie Martin</td>
-                            <td>Service</td>
-                            <td>01/11/2025</td>
-                            <td><span class="priority-badge priority-urgent">Urgente</span></td>
-                            <td><span class="badge badge-warning">En attente</span></td>
-                            <td>
-                                <a href="reclamation-agent-details.php" class="btn btn-sm btn-secondary">Traiter</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#REC-2025-006</td>
-                            <td>Paul Moreau</td>
-                            <td>Livraison</td>
-                            <td>02/11/2025</td>
-                            <td><span class="priority-badge priority-high">Haute</span></td>
-                            <td><span class="badge badge-info">En cours</span></td>
-                            <td>
-                                <a href="reclamation-agent-details.php" class="btn btn-sm btn-secondary">Détails</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#REC-2025-007</td>
-                            <td>Claire Duval</td>
-                            <td>Produit</td>
-                            <td>03/11/2025</td>
-                            <td><span class="priority-badge priority-medium">Moyenne</span></td>
-                            <td><span class="badge badge-warning">En attente</span></td>
-                            <td>
-                                <a href="reclamation-agent-details.php" class="btn btn-sm btn-secondary">Traiter</a>
-                            </td>
-                        </tr>
+                        <?php if (empty($recentReclamations)): ?>
+                            <tr>
+                                <td colspan="7" style="text-align:center;">Aucune reclamation assignee pour le moment.</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($recentReclamations as $rec): ?>
+                                <tr>
+                                    <td>#REC-<?= htmlspecialchars(str_pad((string)$rec['id'], 4, '0', STR_PAD_LEFT)) ?></td>
+                                    <td><?= htmlspecialchars($rec['client']) ?></td>
+                                    <td><?= htmlspecialchars($rec['categorie'] ?? 'Non defini') ?></td>
+                                    <td><?= htmlspecialchars(date('d/m/Y', strtotime($rec['date_creation']))) ?></td>
+                                    <td><?= priorityBadge($rec['priorite']) ?></td>
+                                    <td><?= statusBadge($rec['statut']) ?></td>
+                                    <td>
+                                        <a href="reclamation-agent-details.php?id=<?= urlencode($rec['id']) ?>" class="btn btn-sm btn-secondary">Traiter</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
