@@ -1,12 +1,12 @@
 <?php
 session_start();
+require_once __DIR__ . '/../php/config.php';
 
 $page_title  = "Profil Agent";
 $active_menu = "profile";
 
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'agent') {
-    header("Location: /auth/login.php");
-    exit;
+    redirect_to('auth/login.php');
 }
 
 require_once __DIR__ . '/../php/database.php';

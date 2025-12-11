@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../database.php';
 require_once __DIR__ . '/../models/Reclamation.php';
 
@@ -9,8 +10,7 @@ class UserController
         session_start();
         $userId = $_SESSION['user_id'] ?? null;
         if (!$userId) {
-            header('Location: /auth/login.php');
-            exit;
+            redirect_to('auth/login.php');
         }
 
         $model = new Reclamation(Database::getConnection());

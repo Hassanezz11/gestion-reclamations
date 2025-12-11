@@ -7,13 +7,14 @@
  * + Redirections automatiques
  */
 
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/models/User.php';
 
 class Auth
 {
-    // Base URL path of the app; empty because the project now lives at the vhost root (http://reclam/)
-    public const BASE_PATH = '';
+    // Base URL path detected at runtime (supports subfolder deployments)
+    public const BASE_PATH = APP_BASE_PATH;
     private PDO $pdo;
     private User $userModel;
 
@@ -97,8 +98,7 @@ class Auth
     public function logout()
     {
         session_destroy();
-        header("Location: " . self::BASE_PATH . "/auth/login.php");
-        exit;
+        redirect_to('auth/login.php');
     }
 
     /* =====================================
@@ -108,21 +108,17 @@ class Auth
     {
         switch ($role) {
             case 'admin':
-                header("Location: " . self::BASE_PATH . "/admin/admin-dashboard.php");
-                break;
+                redirect_to('admin/admin-dashboard.php');
 
             case 'agent':
-                header("Location: " . self::BASE_PATH . "/agent/agent-dashboard.php");
-                break;
+                redirect_to('agent/agent-dashboard.php');
 
             case 'user':
-                header("Location: " . self::BASE_PATH . "/user/user-dashboard.php");
-                break;
+                redirect_to('user/user-dashboard.php');
 
             default:
-                header("Location: " . self::BASE_PATH . "/auth/login.php");
+                redirect_to('auth/login.php');
         }
-        exit;
     }
 
     /* =====================================
@@ -135,8 +131,7 @@ class Auth
         }
 
         if (empty($_SESSION['user_id'])) {
-            header("Location: " . self::BASE_PATH . "/auth/login.php");
-            exit;
+            redirect_to('auth/login.php');
         }
     }
 
@@ -148,8 +143,7 @@ class Auth
         self::requireLogin();
 
         if ($_SESSION['user_role'] !== $role) {
-            header("Location: " . self::BASE_PATH . "/admin/unauthorized.php");
-            exit;
+            redirect_to('admin/unauthorized.php');
         }
     }
 }
@@ -162,8 +156,7 @@ if (php_sapi_name() !== 'cli' && realpath($_SERVER['SCRIPT_FILENAME'] ?? '') ===
 
     // On exige un POST pour manipuler l'authentification
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        header('Location: ' . Auth::BASE_PATH . '/auth/login.php');
-        exit;
+        redirect_to('auth/login.php');
     }
 
     $auth = new Auth();
@@ -175,8 +168,7 @@ if (php_sapi_name() !== 'cli' && realpath($_SERVER['SCRIPT_FILENAME'] ?? '') ===
 
             // Auth::login gÉùre sa redirection en cas de succÇùs
             $auth->login($email, $password);
-            header('Location: ' . Auth::BASE_PATH . '/auth/login.php');
-            exit;
+            redirect_to('auth/login.php');
 
         case 'register':
             $nom = trim($_POST['nom_complet'] ?? '');
@@ -185,12 +177,13 @@ if (php_sapi_name() !== 'cli' && realpath($_SERVER['SCRIPT_FILENAME'] ?? '') ===
             $confirm = $_POST['confirm_password'] ?? '';
 
             $success = $auth->register($nom, $email, $password, $confirm);
-            header('Location: ' . ($success ? Auth::BASE_PATH . '/auth/login.php' : Auth::BASE_PATH . '/auth/register.php'));
-            exit;
+            if ($success) {
+                redirect_to('auth/login.php');
+            }
+            redirect_to('auth/register.php');
 
         default:
-            header('Location: ' . Auth::BASE_PATH . '/auth/login.php');
-            exit;
+            redirect_to('auth/login.php');
     }
 }
 ?>

@@ -1,11 +1,11 @@
 <?php
 session_start();
+require_once __DIR__ . '/../php/config.php';
 $page_title  = "Profil Administrateur";
 $active_menu = "profile";
 
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
-    header("Location: /auth/login.php");
-    exit;
+    redirect_to('auth/login.php');
 }
 
 require_once __DIR__ . '/../php/database.php';
@@ -16,8 +16,7 @@ $userModel = new User($pdo);
 
 $userId = $_SESSION['user_id'] ?? null;
 if (!$userId) {
-    header("Location: /auth/login.php");
-    exit;
+    redirect_to('auth/login.php');
 }
 
 $admin  = $userModel->findById($userId);

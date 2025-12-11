@@ -1,11 +1,11 @@
 <?php
 session_start();
+require_once __DIR__ . '/../php/config.php';
 $page_title  = "Tableau de bord utilisateur";
 $active_menu = "dashboard";
 
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'user') {
-    header("Location: /auth/login.php");
-    exit;
+    redirect_to('auth/login.php');
 }
 
 $userName = $_SESSION['user_name'] ?? 'Utilisateur';

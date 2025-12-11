@@ -1,8 +1,13 @@
 <?php
 session_start();
+require_once __DIR__ . '/../php/config.php';
+
 $error = $_SESSION['auth_error'] ?? null;
 $success = $_SESSION['auth_success'] ?? null;
 unset($_SESSION['auth_error'], $_SESSION['auth_success']);
+
+$actionUrl = app_url('php/auth.php?action=register');
+$loginUrl = app_url('auth/login.php');
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -32,7 +37,7 @@ unset($_SESSION['auth_error'], $_SESSION['auth_success']);
         </div>
       <?php endif; ?>
 
-      <form class="auth-form" method="post" action="/php/auth.php?action=register">
+      <form class="auth-form" method="post" action="<?= htmlspecialchars($actionUrl) ?>">
         <div class="form-group">
           <label for="nom_complet">Nom complet</label>
           <input type="text" id="nom_complet" name="nom_complet" required placeholder="Votre nom et prénom">
@@ -58,7 +63,7 @@ unset($_SESSION['auth_error'], $_SESSION['auth_success']);
 
       <div class="auth-footer-text">
         <span>Déjà un compte ?</span>
-        <a href="/auth/login.php">Se connecter</a>
+        <a href="<?= htmlspecialchars($loginUrl) ?>">Se connecter</a>
       </div>
     </div>
   </div>

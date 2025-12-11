@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../database.php';
 require_once __DIR__ . '/../models/Reclamation.php';
 
@@ -9,8 +10,7 @@ class ReclamationController
         session_start();
         $userId = $_SESSION['user_id'] ?? null;
         if (!$userId) {
-            header('Location: /auth/login.php');
-            exit;
+            redirect_to('auth/login.php');
         }
 
         // Récupérer les données du formulaire (à sécuriser)
@@ -27,8 +27,7 @@ class ReclamationController
         $model = new Reclamation(Database::getConnection());
         $model->create($data);
 
-        header('Location: /user/my-reclamations.php');
-        exit;
+        redirect_to('user/my-reclamations.php');
     }
 }
 ?>

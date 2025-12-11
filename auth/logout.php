@@ -1,7 +1,8 @@
 <?php
 session_start();
+require_once __DIR__ . '/../php/config.php';
+
 session_unset();
 session_destroy();
-header('Location: /auth/login.php');
-exit;
+redirect_to('auth/login.php');
 ?>
