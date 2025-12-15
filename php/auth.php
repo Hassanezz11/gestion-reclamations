@@ -12,8 +12,8 @@ require_once __DIR__ . '/models/User.php';
 
 class Auth
 {
-    // Base URL path of the app; empty because the project now lives at the vhost root (http://reclam/)
-    public const BASE_PATH = '';
+    // Base URL path of the app
+    public const BASE_PATH = '/gestion-reclamations';
     private PDO $pdo;
     private User $userModel;
 
@@ -185,7 +185,11 @@ if (php_sapi_name() !== 'cli' && realpath($_SERVER['SCRIPT_FILENAME'] ?? '') ===
             $confirm = $_POST['confirm_password'] ?? '';
 
             $success = $auth->register($nom, $email, $password, $confirm);
-            header('Location: ' . ($success ? Auth::BASE_PATH . '/auth/login.php' : Auth::BASE_PATH . '/auth/register.php'));
+            if ($success) {
+                header('Location: ' . Auth::BASE_PATH . '/auth/login.php');
+            } else {
+                header('Location: ' . Auth::BASE_PATH . '/auth/register.php');
+            }
             exit;
 
         default:

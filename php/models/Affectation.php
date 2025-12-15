@@ -35,4 +35,15 @@ class Affectation
         return (int)$stmt->fetchColumn();
     }
 
+    public function getByReclamationAndAgent(int $recId, int $agentId): ?array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT *
+            FROM affectations
+            WHERE reclamation_id = ? AND agent_id = ?
+        ");
+        $stmt->execute([$recId, $agentId]);
+        return $stmt->fetch() ?: null;
+    }
+
 }

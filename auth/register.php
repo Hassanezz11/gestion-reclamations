@@ -32,7 +32,7 @@ unset($_SESSION['auth_error'], $_SESSION['auth_success']);
         </div>
       <?php endif; ?>
 
-      <form class="auth-form" method="post" action="/php/auth.php?action=register">
+      <form class="auth-form" method="post" action="/gestion-reclamations/php/auth.php?action=register">
         <div class="form-group">
           <label for="nom_complet">Nom complet</label>
           <input type="text" id="nom_complet" name="nom_complet" required placeholder="Votre nom et prénom">
@@ -58,7 +58,7 @@ unset($_SESSION['auth_error'], $_SESSION['auth_success']);
 
       <div class="auth-footer-text">
         <span>Déjà un compte ?</span>
-        <a href="/auth/login.php">Se connecter</a>
+        <a href="/gestion-reclamations/auth/login.php">Se connecter</a>
       </div>
     </div>
   </div>
