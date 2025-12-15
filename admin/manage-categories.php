@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/../php/auth.php';
+Auth::requireRole('admin');
 
 $page_title  = "Gestion des Catégories";
 $active_menu = "categories";
@@ -89,11 +90,11 @@ include 'includes/admin-header.php';
         <section class="content">
 
             <?php if ($success): ?>
-                <div class="alert alert-success"><?= $success ?></div>
+                <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
             <?php endif; ?>
 
             <?php if ($error): ?>
-                <div class="alert alert-danger"><?= $error ?></div>
+                <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
 
 

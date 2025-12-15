@@ -1,12 +1,9 @@
 <?php
-session_start();
-require_once __DIR__ . '/../php/config.php';
+require_once __DIR__ . '/../php/auth.php';
+Auth::requireRole('admin');
+
 $page_title  = "Profil Administrateur";
 $active_menu = "profile";
-
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
-    redirect_to('auth/login.php');
-}
 
 require_once __DIR__ . '/../php/database.php';
 require_once __DIR__ . '/../php/models/User.php';

@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once __DIR__ . '/../php/auth.php';
+Auth::requireRole('admin');
+
 $page_title  = "Tableau de Bord - Administrateur";
 $active_menu = "dashboard";
 

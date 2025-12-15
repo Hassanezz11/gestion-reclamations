@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once __DIR__ . '/../php/auth.php';
+Auth::requireRole('admin');
+
 $page_title  = "Nouvel Agent";
 $active_menu = "agents";
 
@@ -20,15 +22,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($nom === "" || $email === "" || $password === "") {
         $error = "Veuillez remplir tous les champs obligatoires.";
-    } 
-    else {
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "L'adresse email n'est pas valide.";
+    } elseif (strlen($password) < 6) {
+        $error = "Le mot de passe doit contenir au moins 6 caractères.";
+    } elseif ($telephone !== "" && !preg_match('/^[0-9\s\-\+\(\)]{8,20}$/', $telephone)) {
+        $error = "Le numéro de téléphone n'est pas valide.";
+    } else {
 
         // 1) Check email existence via Model
         $existing = $userModel->findByEmail($email);
 
         if ($existing) {
             $error = "Cet email est déjà utilisé.";
-        } 
+        }
         else {
 
             // 2) Create agent

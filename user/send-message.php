@@ -1,53 +1,43 @@
 <?php
 session_start();
 require_once __DIR__ . '/../php/config.php';
-$page_title  = "Envoyer un message";
-$active_menu = "list";
+require_once __DIR__ . '/../php/controllers/UserController.php';
 
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'user') {
     redirect_to('auth/login.php');
 }
 
-$userName = $_SESSION['user_name'] ?? 'Utilisateur';
+$userId = $_SESSION['user_id'];
 
-include __DIR__ . '/includes/user-header.php';
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    redirect_to('user/my-reclamations.php');
+}
+
+$reclamationId = (int)($_POST['reclamation_id'] ?? 0);
+$message = trim($_POST['message'] ?? '');
+
+if ($reclamationId <= 0 || empty($message)) {
+    $_SESSION['error'] = 'Données invalides';
+    redirect_to('user/reclamation-details.php?id=' . $reclamationId);
+    exit;
+}
+
+$userController = new UserController();
+$reclamation = $userController->getReclamationDetails($reclamationId, $userId);
+
+if (!$reclamation) {
+    $_SESSION['error'] = 'Réclamation introuvable';
+    redirect_to('user/my-reclamations.php');
+    exit;
+}
+
+$result = $userController->sendMessage($reclamationId, $userId, $message);
+
+if ($result) {
+    $_SESSION['success'] = 'Message envoyé avec succès';
+} else {
+    $_SESSION['error'] = 'Erreur lors de l\'envoi du message';
+}
+
+redirect_to('user/reclamation-details.php?id=' . $reclamationId);
 ?>
-
-<div class="layout">
-<?php include __DIR__ . '/includes/user-sidebar.php'; ?>
-<main class="main">
-
-    <header class="topbar">
-        <button class="sidebar-toggle" id="sidebarToggle">
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="topbar-user">
-            <span>Bonjour, <?= htmlspecialchars($userName) ?></span>
-            <img src="https://via.placeholder.com/40" alt="Avatar" class="avatar">
-        </div>
-    </header>
-
-    <section class="content">
-        <div class="section">
-            <div class="section-header">
-                <h1>Envoyer un message</h1>
-                <p class="topbar-subtitle">Communiquez avec l'agent en charge de votre réclamation.</p>
-            </div>
-
-            <form class="card form-card">
-                <div class="form-group">
-                    <label for="message">Votre message</label>
-                    <textarea id="message" name="message" rows="5"></textarea>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Envoyer</button>
-                </div>
-            </form>
-        </div>
-    </section>
-
-</main>
-</div>
-
-<?php include __DIR__ . '/includes/user-footer.php'; ?>

@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once __DIR__ . '/../php/config.php';
+require_once __DIR__ . '/../php/controllers/UserController.php';
+
 $page_title  = "Mes réclamations";
 $active_menu = "list";
 
@@ -9,6 +11,54 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'user') {
 }
 
 $userName = $_SESSION['user_name'] ?? 'Utilisateur';
+$userId = $_SESSION['user_id'];
+
+$statusFilter = $_GET['filter'] ?? 'all';
+
+$userController = new UserController();
+$reclamations = $userController->getAllReclamations($userId, $statusFilter);
+
+function getStatusBadge($statut) {
+    switch($statut) {
+        case 'resolue': return 'badge-success';
+        case 'en_cours': return 'badge-info';
+        case 'non_assignee': return 'badge-warning';
+        default: return 'badge-secondary';
+    }
+}
+
+function getStatusText($statut) {
+    switch($statut) {
+        case 'resolue': return 'Résolue';
+        case 'en_cours': return 'En cours';
+        case 'non_assignee': return 'En attente';
+        default: return $statut;
+    }
+}
+
+function getPriorityBadge($priorite) {
+    switch($priorite) {
+        case 'urgente': return 'priority-urgent';
+        case 'haute': return 'priority-high';
+        case 'moyenne': return 'priority-medium';
+        case 'basse': return 'priority-low';
+        default: return 'priority-medium';
+    }
+}
+
+function getPriorityText($priorite) {
+    switch($priorite) {
+        case 'urgente': return 'Urgente';
+        case 'haute': return 'Haute';
+        case 'moyenne': return 'Moyenne';
+        case 'basse': return 'Basse';
+        default: return ucfirst($priorite);
+    }
+}
+
+function formatReclamationId($id) {
+    return '#REC-' . date('Y') . '-' . str_pad($id, 3, '0', STR_PAD_LEFT);
+}
 
 include __DIR__ . '/includes/user-header.php';
 ?>
@@ -30,21 +80,26 @@ include __DIR__ . '/includes/user-header.php';
     <section class="content">
         <h1>Mes réclamations</h1>
 
+        <?php if (isset($_SESSION['success'])): ?>
+            <div class="alert alert-success"><?= htmlspecialchars($_SESSION['success']) ?></div>
+            <?php unset($_SESSION['success']); ?>
+        <?php endif; ?>
+
         <section class="section">
             <div class="section-header">
                 <div class="filter-buttons">
-                    <button class="filter-btn active" data-filter="all">
+                    <a href="?filter=all" class="filter-btn <?= $statusFilter === 'all' ? 'active' : '' ?>">
                         <i class="fas fa-list"></i> Toutes
-                    </button>
-                    <button class="filter-btn" data-filter="pending">
+                    </a>
+                    <a href="?filter=non_assignee" class="filter-btn <?= $statusFilter === 'non_assignee' ? 'active' : '' ?>">
                         <i class="fas fa-clock"></i> En attente
-                    </button>
-                    <button class="filter-btn" data-filter="in-progress">
+                    </a>
+                    <a href="?filter=en_cours" class="filter-btn <?= $statusFilter === 'en_cours' ? 'active' : '' ?>">
                         <i class="fas fa-hourglass-half"></i> En cours
-                    </button>
-                    <button class="filter-btn" data-filter="resolved">
+                    </a>
+                    <a href="?filter=resolue" class="filter-btn <?= $statusFilter === 'resolue' ? 'active' : '' ?>">
                         <i class="fas fa-check-circle"></i> Résolues
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -62,50 +117,25 @@ include __DIR__ . '/includes/user-header.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>#REC-2025-001</td>
-                            <td>Produit défectueux reçu</td>
-                            <td>Produit</td>
-                            <td>01/11/2025</td>
-                            <td><span class="priority-badge priority-high">Haute</span></td>
-                            <td><span class="badge badge-success">Résolue</span></td>
-                            <td>
-                                <a href="reclamation-details.php" class="btn btn-sm btn-secondary">Détails</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#REC-2025-002</td>
-                            <td>Service client insatisfaisant</td>
-                            <td>Service</td>
-                            <td>02/11/2025</td>
-                            <td><span class="priority-badge priority-medium">Moyenne</span></td>
-                            <td><span class="badge badge-info">En cours</span></td>
-                            <td>
-                                <a href="reclamation-details.php" class="btn btn-sm btn-secondary">Détails</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#REC-2025-003</td>
-                            <td>Livraison en retard de 5 jours</td>
-                            <td>Livraison</td>
-                            <td>03/11/2025</td>
-                            <td><span class="priority-badge priority-urgent">Urgente</span></td>
-                            <td><span class="badge badge-warning">En attente</span></td>
-                            <td>
-                                <a href="reclamation-details.php" class="btn btn-sm btn-secondary">Détails</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#REC-2025-004</td>
-                            <td>Facture incorrecte</td>
-                            <td>Facturation</td>
-                            <td>04/11/2025</td>
-                            <td><span class="priority-badge priority-low">Basse</span></td>
-                            <td><span class="badge badge-success">Résolue</span></td>
-                            <td>
-                                <a href="reclamation-details.php" class="btn btn-sm btn-secondary">Détails</a>
-                            </td>
-                        </tr>
+                        <?php if (empty($reclamations)): ?>
+                            <tr>
+                                <td colspan="7" style="text-align: center;">Aucune réclamation trouvée</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach($reclamations as $rec): ?>
+                                <tr>
+                                    <td><?= formatReclamationId($rec['id']) ?></td>
+                                    <td><?= htmlspecialchars($rec['objet']) ?></td>
+                                    <td><?= htmlspecialchars($rec['categorie'] ?? 'Non définie') ?></td>
+                                    <td><?= date('d/m/Y', strtotime($rec['date_creation'])) ?></td>
+                                    <td><span class="priority-badge <?= getPriorityBadge($rec['priorite']) ?>"><?= getPriorityText($rec['priorite']) ?></span></td>
+                                    <td><span class="badge <?= getStatusBadge($rec['statut']) ?>"><?= getStatusText($rec['statut']) ?></span></td>
+                                    <td>
+                                        <a href="reclamation-details.php?id=<?= $rec['id'] ?>" class="btn btn-sm btn-secondary">Détails</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -115,12 +145,4 @@ include __DIR__ . '/includes/user-header.php';
 </main>
 </div>
 
-<script>
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
-</script>
 <?php include __DIR__ . '/includes/user-footer.php'; ?>

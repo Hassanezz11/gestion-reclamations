@@ -14,8 +14,8 @@ $loginUrl = app_url('auth/login.php');
 <head>
   <meta charset="UTF-8">
   <title>Inscription - Gestion des Réclamations</title>
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../assets/css/auth.css">
+  <link rel="stylesheet" href="<?= app_url('assets/css/style.css') ?>">
+  <link rel="stylesheet" href="<?= app_url('assets/css/auth.css') ?>">
 </head>
 <body class="auth-body">
   <div class="auth-container">

@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/../php/auth.php';
+Auth::requireRole('admin');
 
 $page_title  = "Modifier Agent";
 $active_menu = "agents";

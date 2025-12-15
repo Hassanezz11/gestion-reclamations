@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once __DIR__ . '/../php/config.php';
+require_once __DIR__ . '/../php/controllers/UserController.php';
+
 $page_title  = "Tableau de bord utilisateur";
 $active_menu = "dashboard";
 
@@ -9,6 +11,33 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'user') {
 }
 
 $userName = $_SESSION['user_name'] ?? 'Utilisateur';
+$userId = $_SESSION['user_id'];
+
+$userController = new UserController();
+$stats = $userController->getDashboardStats($userId);
+$recentReclamations = $userController->getRecentReclamations($userId, 5);
+
+function getStatusBadge($statut) {
+    switch($statut) {
+        case 'resolue': return 'badge-success';
+        case 'en_cours': return 'badge-info';
+        case 'non_assignee': return 'badge-warning';
+        default: return 'badge-secondary';
+    }
+}
+
+function getStatusText($statut) {
+    switch($statut) {
+        case 'resolue': return 'Résolue';
+        case 'en_cours': return 'En cours';
+        case 'non_assignee': return 'En attente';
+        default: return $statut;
+    }
+}
+
+function formatReclamationId($id) {
+    return '#REC-' . date('Y') . '-' . str_pad($id, 3, '0', STR_PAD_LEFT);
+}
 
 include __DIR__ . '/includes/user-header.php';
 ?>
@@ -37,7 +66,7 @@ include __DIR__ . '/includes/user-header.php';
                 </div>
                 <div class="stat-content">
                     <div class="stat-label">Réclamations totales</div>
-                    <div class="stat-value">8</div>
+                    <div class="stat-value"><?= $stats['total'] ?? 0 ?></div>
                 </div>
             </div>
 
@@ -47,7 +76,7 @@ include __DIR__ . '/includes/user-header.php';
                 </div>
                 <div class="stat-content">
                     <div class="stat-label">En attente</div>
-                    <div class="stat-value">2</div>
+                    <div class="stat-value"><?= $stats['en_attente'] ?? 0 ?></div>
                 </div>
             </div>
 
@@ -57,7 +86,7 @@ include __DIR__ . '/includes/user-header.php';
                 </div>
                 <div class="stat-content">
                     <div class="stat-label">En cours</div>
-                    <div class="stat-value">3</div>
+                    <div class="stat-value"><?= $stats['en_cours'] ?? 0 ?></div>
                 </div>
             </div>
 
@@ -67,7 +96,7 @@ include __DIR__ . '/includes/user-header.php';
                 </div>
                 <div class="stat-content">
                     <div class="stat-label">Résolues</div>
-                    <div class="stat-value">3</div>
+                    <div class="stat-value"><?= $stats['resolues'] ?? 0 ?></div>
                 </div>
             </div>
         </div>
@@ -90,33 +119,23 @@ include __DIR__ . '/includes/user-header.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>#REC-2025-001</td>
-                            <td>Produit défectueux</td>
-                            <td>01/11/2025</td>
-                            <td><span class="badge badge-success">Résolue</span></td>
-                            <td>
-                                <a href="reclamation-details.php" class="btn btn-sm btn-secondary">Détails</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#REC-2025-002</td>
-                            <td>Service insatisfaisant</td>
-                            <td>02/11/2025</td>
-                            <td><span class="badge badge-info">En cours</span></td>
-                            <td>
-                                <a href="reclamation-details.php" class="btn btn-sm btn-secondary">Détails</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#REC-2025-003</td>
-                            <td>Livraison en retard</td>
-                            <td>03/11/2025</td>
-                            <td><span class="badge badge-warning">En attente</span></td>
-                            <td>
-                                <a href="reclamation-details.php" class="btn btn-sm btn-secondary">Détails</a>
-                            </td>
-                        </tr>
+                        <?php if (empty($recentReclamations)): ?>
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Aucune réclamation pour le moment</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach($recentReclamations as $rec): ?>
+                                <tr>
+                                    <td><?= formatReclamationId($rec['id']) ?></td>
+                                    <td><?= htmlspecialchars($rec['categorie'] ?? 'Non définie') ?></td>
+                                    <td><?= date('d/m/Y', strtotime($rec['date_creation'])) ?></td>
+                                    <td><span class="badge <?= getStatusBadge($rec['statut']) ?>"><?= getStatusText($rec['statut']) ?></span></td>
+                                    <td>
+                                        <a href="reclamation-details.php?id=<?= $rec['id'] ?>" class="btn btn-sm btn-secondary">Détails</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>

@@ -1,5 +1,7 @@
 <?php
-session_start();
+require_once __DIR__ . '/../php/auth.php';
+Auth::requireRole('admin');
+
 $page_title  = "Détails Réclamation";
 $active_menu = "reclamations";
 

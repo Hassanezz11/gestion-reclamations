@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once __DIR__ . '/../php/config.php';
+require_once __DIR__ . '/../php/controllers/ReclamationController.php';
+
 $page_title  = "Nouvelle réclamation";
 $active_menu = "add";
 
@@ -9,6 +11,23 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'user') {
 }
 
 $userName = $_SESSION['user_name'] ?? 'Utilisateur';
+$userId = $_SESSION['user_id'];
+
+$reclamationController = new ReclamationController();
+$categories = $reclamationController->getAllCategories();
+
+$success = $error = "";
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $result = $reclamationController->create($userId);
+    if ($result['success']) {
+        $_SESSION['success'] = $result['message'];
+        redirect_to('user/my-reclamations.php');
+        exit;
+    } else {
+        $error = $result['message'];
+    }
+}
 
 include __DIR__ . '/includes/user-header.php';
 ?>
@@ -30,17 +49,20 @@ include __DIR__ . '/includes/user-header.php';
     <section class="content">
         <h1>Soumettre une nouvelle réclamation</h1>
 
+        <?php if ($error): ?>
+            <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+
         <section class="section">
-            <form class="form-large" id="reclamationForm">
+            <form class="form-large" method="POST" action="" enctype="multipart/form-data" id="reclamationForm">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="category">Catégorie *</label>
                         <select id="category" name="category" required onchange="updateSubcategories()">
                             <option value="">Sélectionnez une catégorie</option>
-                            <option value="product">Produit</option>
-                            <option value="service">Service</option>
-                            <option value="delivery">Livraison</option>
-                            <option value="billing">Facturation</option>
+                            <?php foreach($categories as $cat): ?>
+                                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nom']) ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 
@@ -56,10 +78,10 @@ include __DIR__ . '/includes/user-header.php';
                     <div class="form-group">
                         <label for="priority">Priorité *</label>
                         <select id="priority" name="priority" required>
-                            <option value="low">Basse</option>
-                            <option value="medium" selected>Moyenne</option>
-                            <option value="high">Haute</option>
-                            <option value="urgent">Urgente</option>
+                            <option value="basse">Basse</option>
+                            <option value="moyenne" selected>Moyenne</option>
+                            <option value="haute">Haute</option>
+                            <option value="urgente">Urgente</option>
                         </select>
                     </div>
 
@@ -103,33 +125,32 @@ include __DIR__ . '/includes/user-header.php';
 </div>
 
 <script>
-    const subcategories = {
-        'product': ['Produit défectueux', 'Produit endommagé', 'Produit non conforme'],
-        'service': ['Service insatisfaisant', 'Délai excessif', 'Manque de professionnalisme'],
-        'delivery': ['Livraison en retard', 'Produit non reçu', 'Mauvaise adresse'],
-        'billing': ['Facturation erronée', 'Double facturation', 'Remboursement']
-    };
-
     function updateSubcategories() {
-        const category = document.getElementById('category').value;
+        const categoryId = document.getElementById('category').value;
         const subcategorySelect = document.getElementById('subcategory');
-        
-        subcategorySelect.innerHTML = '<option value=\"\">Sélectionnez une sous-catégorie</option>';
-        
-        if (category && subcategories[category]) {
-            subcategories[category].forEach(sub => {
-                const option = document.createElement('option');
-                option.value = sub.toLowerCase().replace(/\\s+/g, '-');
-                option.textContent = sub;
-                subcategorySelect.appendChild(option);
-            });
-        }
-    }
 
-    document.getElementById('reclamationForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        alert('Réclamation soumise avec succès!');
-        window.location.href = 'my-reclamations.php';
-    });
+        subcategorySelect.innerHTML = '<option value="">Chargement...</option>';
+
+        if (!categoryId) {
+            subcategorySelect.innerHTML = '<option value="">Sélectionnez d\'abord une catégorie</option>';
+            return;
+        }
+
+        fetch('../php/api/get-subcategories.php?category_id=' + categoryId)
+            .then(response => response.json())
+            .then(data => {
+                subcategorySelect.innerHTML = '<option value="">Sélectionnez une sous-catégorie</option>';
+                data.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.id;
+                    option.textContent = sub.nom;
+                    subcategorySelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                subcategorySelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            });
+    }
 </script>
 <?php include __DIR__ . '/includes/user-footer.php'; ?>

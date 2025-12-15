@@ -1,12 +1,9 @@
 <?php
-session_start();
-require_once __DIR__ . '/../php/config.php';
+require_once __DIR__ . '/../php/auth.php';
+Auth::requireRole('agent');
+
 $page_title  = "Gerer les reclamations";
 $active_menu = "reclamations";
-
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'agent') {
-    redirect_to('auth/login.php');
-}
 
 $userName = $_SESSION['user_name'] ?? 'Agent';
 $agentId  = (int)($_SESSION['user_id'] ?? 0);

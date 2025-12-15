@@ -1,13 +1,9 @@
 <?php
-session_start();
-require_once __DIR__ . '/../php/config.php';
+require_once __DIR__ . '/../php/auth.php';
+Auth::requireRole('agent');
 
 $page_title  = "Profil Agent";
 $active_menu = "profile";
-
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'agent') {
-    redirect_to('auth/login.php');
-}
 
 require_once __DIR__ . '/../php/database.php';
 require_once __DIR__ . '/../php/models/User.php';
